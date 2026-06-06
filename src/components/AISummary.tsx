@@ -86,7 +86,7 @@ export function AISummary({ unitCode }: { unitCode: string }) {
         {retryMessage ||
           data?.error ||
           data?.message ||
-          "AI Summary will be available if more than 1 review is posted."}
+          "Generating AI summary..."}
       </div>
     );
   }
