@@ -84,7 +84,7 @@ export function AISummary({ unitCode }: { unitCode: string }) {
         {retryMessage ||
           data?.error ||
           data?.message ||
-          "AI summary will appear once more than one review is posted for this unit."}
+          "AI Summary will be available if more than 1 review is posted."}
       </div>
     );
   }
