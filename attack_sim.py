@@ -38,7 +38,7 @@ print("Trying with a forged/random session cookie...")
 fake_cookie = f"session_id={uuid.uuid4()}"
 status, res = req("POST", "/api/reviews", {
     "unitCode": "DATA1001",
-    "title": "Spam Review", "coordinatorName": "A", "lecturerName": "B", 
+    "title": "Spam Review", "coordinatorName": "A", "lecturerName": "B", "tutorName": "", 
     "year": 2026, "content": "Spam content "*5, "grade": "P",
     "ratingContent": 3, "ratingWorkload": 3, "ratingExamDifficulty": 3, "ratingFinalResult": 3
 }, cookie=fake_cookie)
