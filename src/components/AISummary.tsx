@@ -8,6 +8,8 @@ interface SummaryData {
   reviewCount: number;
   message?: string;
   error?: string;
+  warning?: string;
+  aiGenerated?: boolean;
 }
 
 export function AISummary({ unitCode }: { unitCode: string }) {
@@ -97,6 +99,10 @@ export function AISummary({ unitCode }: { unitCode: string }) {
           AI Summary ({data.reviewCount} reviews)
         </h3>
       </div>
+
+      {data.warning && (
+        <p className="mt-3 text-xs text-amber-700">{data.warning}</p>
+      )}
 
       <div className="mt-4 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
         {data.summary}
