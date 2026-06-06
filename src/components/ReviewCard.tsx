@@ -43,11 +43,19 @@ export function ReviewCard({ review }: { review: PublicReview }) {
         <GradeBadge grade={review.grade} />
       </div>
 
-      <div className="mt-4 grid gap-y-2 gap-x-8 sm:grid-cols-2">
-        <RatingRow label="Unit Content" value={review.ratingContent} align="left" />
-        <RatingRow label="Overall Workload" value={review.ratingWorkload} align="right" />
-        <RatingRow label="Exam Difficulty" value={review.ratingExamDifficulty} align="left" />
-        <RatingRow label="Final Result" value={review.ratingFinalResult} align="right" />
+      <div className="mt-4 grid gap-8 sm:grid-cols-2">
+        <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 text-sm">
+          <RatingLabel align="left">Unit Content</RatingLabel>
+          <StarDisplay value={review.ratingContent} />
+          <RatingLabel align="left">Exam Difficulty</RatingLabel>
+          <StarDisplay value={review.ratingExamDifficulty} />
+        </div>
+        <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 text-sm">
+          <RatingLabel align="right">Overall Workload</RatingLabel>
+          <StarDisplay value={review.ratingWorkload} />
+          <RatingLabel align="right">Final Result</RatingLabel>
+          <StarDisplay value={review.ratingFinalResult} />
+        </div>
       </div>
 
       <p className="mt-4 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
@@ -72,23 +80,18 @@ export function ReviewCard({ review }: { review: PublicReview }) {
   );
 }
 
-function RatingRow({
-  label,
-  value,
+function RatingLabel({
   align,
+  children,
 }: {
-  label: string;
-  value: number;
   align: "left" | "right";
+  children: string;
 }) {
   return (
-    <div
-      className={`flex items-center gap-3 text-sm ${
-        align === "right" ? "justify-end" : "justify-start"
-      }`}
+    <span
+      className={`text-slate-500 ${align === "right" ? "text-right" : "text-left"}`}
     >
-      <span className="shrink-0 text-slate-500">{label}</span>
-      <StarDisplay value={value} />
-    </div>
+      {children}
+    </span>
   );
 }
