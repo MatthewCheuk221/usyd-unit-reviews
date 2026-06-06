@@ -43,15 +43,25 @@ export function ReviewCard({ review }: { review: PublicReview }) {
         <GradeBadge grade={review.grade} />
       </div>
 
-      <div className="mt-4 grid gap-x-6 gap-y-2 sm:grid-cols-2">
-        <div className="space-y-2">
-          <RatingRow label="Unit Content" value={review.ratingContent} />
-          <RatingRow label="Exam Difficulty" value={review.ratingExamDifficulty} />
-        </div>
-        <div className="space-y-2">
-          <RatingRow label="Overall Workload" value={review.ratingWorkload} />
-          <RatingRow label="Final Result" value={review.ratingFinalResult} />
-        </div>
+      {/* 4-column grid: label | stars | label | stars — mirrors the screenshot exactly */}
+      <div className="mt-4 hidden items-center gap-y-2 text-sm sm:grid sm:grid-cols-[1fr_auto_1fr_auto]">
+        <span className="text-slate-500">Unit Content</span>
+        <StarDisplay value={review.ratingContent} />
+        <span className="pl-8 text-slate-500">Overall Workload</span>
+        <StarDisplay value={review.ratingWorkload} />
+
+        <span className="text-slate-500">Exam Difficulty</span>
+        <StarDisplay value={review.ratingExamDifficulty} />
+        <span className="pl-8 text-slate-500">Final Result</span>
+        <StarDisplay value={review.ratingFinalResult} />
+      </div>
+
+      {/* Stacked fallback for mobile */}
+      <div className="mt-4 space-y-2 text-sm sm:hidden">
+        <RatingRow label="Unit Content" value={review.ratingContent} />
+        <RatingRow label="Overall Workload" value={review.ratingWorkload} />
+        <RatingRow label="Exam Difficulty" value={review.ratingExamDifficulty} />
+        <RatingRow label="Final Result" value={review.ratingFinalResult} />
       </div>
 
       <p className="mt-4 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
@@ -78,7 +88,7 @@ export function ReviewCard({ review }: { review: PublicReview }) {
 
 function RatingRow({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex w-full items-center justify-between gap-3 text-sm">
+    <div className="flex items-center justify-between gap-2">
       <span className="text-slate-500">{label}</span>
       <StarDisplay value={value} />
     </div>
