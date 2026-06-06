@@ -1,15 +1,12 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getUnitsGroupedByLevel } from "@/lib/units";
 import {
-  BROWSE_CATEGORIES,
   CATEGORY_LABELS,
   CATEGORY_DESCRIPTIONS,
   LEVEL_SECTION_LABELS,
-  type BrowseCategory,
+  normalizeBrowseCategorySlug,
 } from "@/lib/types";
-
-const VALID_CATEGORIES = new Set<string>(BROWSE_CATEGORIES);
 
 export default async function CategoryPage({
   params,
@@ -17,12 +14,15 @@ export default async function CategoryPage({
   params: Promise<{ category: string }>;
 }) {
   const { category } = await params;
-
-  if (!VALID_CATEGORIES.has(category)) {
+  const browseCategory = normalizeBrowseCategorySlug(category);
+  if (!browseCategory) {
     notFound();
   }
 
-  const browseCategory = category as BrowseCategory;
+  if (category !== browseCategory) {
+    redirect(`/units/${browseCategory}`);
+  }
+
   const groups = getUnitsGroupedByLevel(browseCategory);
 
   return (
