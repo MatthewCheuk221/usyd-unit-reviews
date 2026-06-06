@@ -43,18 +43,15 @@ export function ReviewCard({ review }: { review: PublicReview }) {
         <GradeBadge grade={review.grade} />
       </div>
 
-      <div className="mt-4 grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-x-2 gap-y-2 text-sm">
-        <span className="text-slate-500">Unit Content</span>
-        <RatingStars value={review.ratingContent} />
-        <span aria-hidden="true" />
-        <span className="text-slate-500">Overall Workload</span>
-        <RatingStars value={review.ratingWorkload} />
-
-        <span className="text-slate-500">Exam Difficulty</span>
-        <RatingStars value={review.ratingExamDifficulty} />
-        <span aria-hidden="true" />
-        <span className="text-slate-500">Final Result</span>
-        <RatingStars value={review.ratingFinalResult} />
+      <div className="mt-4 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+        <div className="space-y-2">
+          <RatingRow label="Unit Content" value={review.ratingContent} />
+          <RatingRow label="Exam Difficulty" value={review.ratingExamDifficulty} />
+        </div>
+        <div className="space-y-2">
+          <RatingRow label="Overall Workload" value={review.ratingWorkload} />
+          <RatingRow label="Final Result" value={review.ratingFinalResult} />
+        </div>
       </div>
 
       <p className="mt-4 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
@@ -79,10 +76,11 @@ export function ReviewCard({ review }: { review: PublicReview }) {
   );
 }
 
-function RatingStars({ value }: { value: number }) {
+function RatingRow({ label, value }: { label: string; value: number }) {
   return (
-    <span className="pl-[1200px]">
+    <div className="flex w-full items-center justify-between gap-3 text-sm">
+      <span className="text-slate-500">{label}</span>
       <StarDisplay value={value} />
-    </span>
+    </div>
   );
 }
