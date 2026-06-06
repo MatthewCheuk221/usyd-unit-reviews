@@ -213,6 +213,38 @@ function sanitizeForLlm(text: string): string {
     .trim();
 }
 
+function resolveThinkOption(model: string): boolean | string {
+  // GPT-OSS ignores boolean think flags; it expects low/medium/high.
+  // See: https://docs.ollama.com/capabilities/thinking
+  if (model.toLowerCase().includes("gpt-oss")) {
+    return "low";
+  }
+  // Disable thinking traces so models return final text in message.content.
+  return false;
+}
+
+function extractOllamaContent(data: Record<string, unknown>): string {
+  const message =
+    data.message && typeof data.message === "object"
+      ? (data.message as Record<string, unknown>)
+      : undefined;
+
+  const content =
+    typeof message?.content === "string" ? message.content.trim() : "";
+  if (content) return content;
+
+  const topLevelResponse =
+    typeof data.response === "string" ? data.response.trim() : "";
+  if (topLevelResponse) return topLevelResponse;
+
+  // Some thinking models only populate message.thinking when think is enabled.
+  const thinking =
+    typeof message?.thinking === "string" ? message.thinking.trim() : "";
+  if (thinking) return thinking;
+
+  return "";
+}
+
 function sanitizeSummaryOutput(text: string): string {
   return text
     .replace(/https?:\/\/\S+/gi, "[link removed]")
@@ -262,8 +294,10 @@ async function summarizeWithOllama(
           { role: "user", content: buildReviewPrompt(unitName, safeReviews) },
         ],
         stream: false,
+        think: resolveThinkOption(model),
         options: {
           temperature: 0.3,
+          num_predict: 1024,
         },
       }),
       signal: controller.signal,
@@ -274,11 +308,14 @@ async function summarizeWithOllama(
       throw new Error(`Ollama chat failed: ${detail}`);
     }
 
-    const data = await response.json();
-    const content = data.message?.content?.trim();
+    const data = (await response.json()) as Record<string, unknown>;
+    const content = extractOllamaContent(data);
 
     if (!content) {
-      throw new Error("Ollama returned an empty summary");
+      console.error("Ollama empty summary payload:", JSON.stringify(data).slice(0, 500));
+      throw new Error(
+        "Ollama returned an empty summary. Check OLLAMA_MODEL is a valid cloud model."
+      );
     }
 
     return content;
