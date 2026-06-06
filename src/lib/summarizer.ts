@@ -11,15 +11,28 @@ const SYSTEM_PROMPT =
 const OLLAMA_CLOUD_HOST = "ollama.com";
 const LOCAL_OLLAMA_DEFAULT = "http://127.0.0.1:11434";
 const CLOUD_OLLAMA_DEFAULT = "https://ollama.com";
+const CLOUD_REQUEST_TIMEOUT_MS = 45_000;
+const LOCAL_REQUEST_TIMEOUT_MS = 15_000;
+
+export interface SummarizeResult {
+  summary: string;
+  aiGenerated: boolean;
+  warning?: string;
+}
 
 interface OllamaConfig {
   baseUrl: string;
   headers: Record<string, string>;
   requireModel: boolean;
+  cloudMode: boolean;
 }
 
 function isProductionRuntime(): boolean {
   return process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+}
+
+function hasOllamaApiKey(): boolean {
+  return Boolean(process.env.OLLAMA_API_KEY?.trim());
 }
 
 function buildOllamaHeaders(apiKey?: string): Record<string, string> {
@@ -32,42 +45,62 @@ function buildOllamaHeaders(apiKey?: string): Record<string, string> {
   return headers;
 }
 
+function isOllamaCloudHost(hostname: string): boolean {
+  return hostname.toLowerCase() === OLLAMA_CLOUD_HOST;
+}
+
 function assertAllowedOllamaHost(hostname: string, cloudMode: boolean): void {
   const host = hostname.toLowerCase();
   if (cloudMode) {
-    if (host !== OLLAMA_CLOUD_HOST) {
-      throw new Error("OLLAMA_BASE_URL must point to ollama.com in production");
+    if (!isOllamaCloudHost(host)) {
+      throw new Error("Production Ollama must use https://ollama.com");
     }
     return;
   }
 
   const allowedLocalHosts = new Set(["localhost", "127.0.0.1", "::1"]);
   if (!allowedLocalHosts.has(host)) {
-    throw new Error("OLLAMA_BASE_URL must point to local Ollama in development");
+    throw new Error("Local Ollama must use http://127.0.0.1:11434");
   }
 }
 
 function resolveOllamaConfig(): OllamaConfig | null {
   const apiKey = process.env.OLLAMA_API_KEY?.trim();
   const configuredBaseUrl = process.env.OLLAMA_BASE_URL?.trim();
-  const useCloud = isProductionRuntime() && Boolean(apiKey);
+  const cloudMode = isProductionRuntime() && Boolean(apiKey);
 
   if (isProductionRuntime() && !apiKey) {
     return null;
   }
 
-  const baseUrl = configuredBaseUrl || (useCloud ? CLOUD_OLLAMA_DEFAULT : LOCAL_OLLAMA_DEFAULT);
+  // In production with an API key, always target Ollama Cloud even if an old
+  // local URL was left in environment variables.
+  let baseUrl = configuredBaseUrl || LOCAL_OLLAMA_DEFAULT;
+  if (cloudMode) {
+    baseUrl = CLOUD_OLLAMA_DEFAULT;
+    if (configuredBaseUrl) {
+      try {
+        const host = new URL(configuredBaseUrl).hostname;
+        if (isOllamaCloudHost(host)) {
+          baseUrl = new URL(configuredBaseUrl).origin;
+        }
+      } catch {
+        // Ignore invalid production URL and use the cloud default.
+      }
+    }
+  }
 
   try {
     const parsed = new URL(baseUrl);
     if (!["http:", "https:"].includes(parsed.protocol)) {
       throw new Error("OLLAMA_BASE_URL must use http or https");
     }
-    assertAllowedOllamaHost(parsed.hostname, useCloud);
+    assertAllowedOllamaHost(parsed.hostname, cloudMode);
     return {
       baseUrl: parsed.origin,
       headers: buildOllamaHeaders(apiKey),
-      requireModel: useCloud,
+      requireModel: cloudMode,
+      cloudMode,
     };
   } catch (error) {
     if (error instanceof Error) {
@@ -77,23 +110,49 @@ function resolveOllamaConfig(): OllamaConfig | null {
   }
 }
 
+async function readOllamaError(response: Response): Promise<string> {
+  try {
+    const text = await response.text();
+    if (!text) return `status ${response.status}`;
+    const parsed = JSON.parse(text) as { error?: string };
+    return parsed.error || text.slice(0, 200);
+  } catch {
+    return `status ${response.status}`;
+  }
+}
+
 export async function summarizeReviews(
   _unitCode: string,
   unitName: string,
   reviews: Review[]
-): Promise<string> {
+): Promise<SummarizeResult> {
   if (reviews.length <= 1) {
-    return "";
+    return { summary: "", aiGenerated: false };
   }
 
-  // Cap the number of reviews we consider for summarization (abuse / cost control)
   const capped = reviews.slice(0, 8);
 
   try {
     const summary = await summarizeWithOllama(unitName, capped);
-    return sanitizeSummaryOutput(summary);
-  } catch {
-    return sanitizeSummaryOutput(summarizeLocally(capped));
+    return {
+      summary: sanitizeSummaryOutput(summary),
+      aiGenerated: true,
+    };
+  } catch (error) {
+    console.error("Ollama summarization failed:", error);
+
+    // In production with an API key configured, do not silently degrade.
+    if (isProductionRuntime() && hasOllamaApiKey()) {
+      const message =
+        error instanceof Error ? error.message : "Ollama summarization failed";
+      throw new Error(message);
+    }
+
+    return {
+      summary: sanitizeSummaryOutput(summarizeLocally(capped)),
+      aiGenerated: false,
+      warning: "AI model unavailable — showing excerpt preview instead.",
+    };
   }
 }
 
@@ -110,12 +169,14 @@ async function getOllamaModel(
   headers: Record<string, string>,
   requireModel: boolean
 ): Promise<string> {
-  if (process.env.OLLAMA_MODEL) {
-    return process.env.OLLAMA_MODEL;
+  if (process.env.OLLAMA_MODEL?.trim()) {
+    return process.env.OLLAMA_MODEL.trim();
   }
 
   if (requireModel) {
-    throw new Error("OLLAMA_MODEL must be set when using OLLAMA_API_KEY in production");
+    throw new Error(
+      "OLLAMA_MODEL must be set for Ollama Cloud (e.g. gpt-oss:20b)"
+    );
   }
 
   const controller = new AbortController();
@@ -126,14 +187,15 @@ async function getOllamaModel(
       signal: controller.signal,
     });
     if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.status}`);
+      const detail = await readOllamaError(response);
+      throw new Error(`Ollama model lookup failed: ${detail}`);
     }
 
     const data = await response.json();
     const model = data.models?.[0]?.name;
 
     if (!model) {
-      throw new Error("No Ollama models installed. Run: ollama pull llama3.2");
+      throw new Error("No local Ollama models installed");
     }
 
     return model;
@@ -167,7 +229,9 @@ async function summarizeWithOllama(
 ): Promise<string> {
   const config = resolveOllamaConfig();
   if (!config) {
-    throw new Error("OLLAMA_API_KEY is not configured for production");
+    throw new Error(
+      "OLLAMA_API_KEY is not configured for production. Create one at ollama.com/settings/keys"
+    );
   }
 
   const model = await getOllamaModel(
@@ -181,8 +245,11 @@ async function summarizeWithOllama(
     content: sanitizeForLlm(r.content).slice(0, 1200),
   }));
 
+  const timeoutMs = config.cloudMode
+    ? CLOUD_REQUEST_TIMEOUT_MS
+    : LOCAL_REQUEST_TIMEOUT_MS;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(`${config.baseUrl}/api/chat`, {
@@ -203,7 +270,8 @@ async function summarizeWithOllama(
     });
 
     if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.status}`);
+      const detail = await readOllamaError(response);
+      throw new Error(`Ollama chat failed: ${detail}`);
     }
 
     const data = await response.json();
@@ -214,6 +282,11 @@ async function summarizeWithOllama(
     }
 
     return content;
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("Ollama request timed out");
+    }
+    throw error;
   } finally {
     clearTimeout(timeoutId);
   }
