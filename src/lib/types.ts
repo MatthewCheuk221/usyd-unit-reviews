@@ -7,7 +7,7 @@ export type UnitLevel =
   | "level6"
   | "level9";
 
-export type BrowseCategory = "undergraduate" | "level5plus";
+export type BrowseCategory = "undergraduate" | "postgraduate";
 
 export type Grade = "H" | "D" | "C" | "P" | "F";
 
@@ -90,17 +90,17 @@ export const POSTGRADUATE_LEVELS: UnitLevel[] = ["level5", "level6", "level9"];
 
 export const BROWSE_CATEGORIES: BrowseCategory[] = [
   "undergraduate",
-  "level5plus",
+  "postgraduate",
 ];
 
 export const CATEGORY_LABELS: Record<BrowseCategory, string> = {
   undergraduate: "Undergraduate units",
-  level5plus: "Postgraduate units",
+  postgraduate: "Postgraduate units",
 };
 
 export const CATEGORY_DESCRIPTIONS: Record<BrowseCategory, string> = {
   undergraduate: "1000-level, 2000-level, 3000-level, and 4000-level units",
-  level5plus: "5000-level, 6000-level, and 9000-level units",
+  postgraduate: "5000-level, 6000-level, and 9000-level units",
 };
 
 export const LEVEL_SECTION_LABELS: Record<UnitLevel, string> = {
@@ -139,4 +139,15 @@ export function unitBelongsToBrowseCategory(
     return UNDERGRADUATE_LEVELS.includes(unitLevel);
   }
   return isPostgraduateLevel(unitLevel);
+}
+
+export function normalizeBrowseCategorySlug(value: string): BrowseCategory | null {
+  if (value === "undergraduate" || value === "postgraduate") {
+    return value;
+  }
+  // Backward compatibility for old shared links.
+  if (value === "level5plus") {
+    return "postgraduate";
+  }
+  return null;
 }
