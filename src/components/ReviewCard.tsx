@@ -74,8 +74,8 @@ export function ReviewCard({ review }: { review: PublicReview }) {
 
 function RatingRow({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-center gap-4 text-sm">
-      <span className="shrink-0 text-slate-500">{label}</span>
+    <div className="flex items-center justify-between gap-2 text-sm">
+      <span className="text-slate-500">{label}</span>
       <StarDisplay value={value} />
     </div>
   );
