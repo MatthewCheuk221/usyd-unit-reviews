@@ -17,6 +17,13 @@ import type { Grade, PublicReview, ReviewInput } from "@/lib/types";
 import { GRADES, YEARS } from "@/lib/types";
 
 const VALID_GRADES = new Set<string>(GRADES);
+const REVIEW_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const REVIEW_PER_UNIT_WINDOW_MS = 10 * 60 * 1000;
+const REVIEW_GLOBAL_SHARD_LIMIT = 60;
+const REVIEW_PER_FINGERPRINT_LIMIT = 12;
+const REVIEW_PER_UNIT_LIMIT = 5;
+const MIN_SESSION_AGE_SECONDS = 2;
+const MIN_DEVICE_AGE_SECONDS = 8;
 
 function cleanText(value: unknown, maxLength: number): string {
   const str = typeof value === "string" ? value : String(value ?? "");
@@ -100,13 +107,13 @@ export async function POST(request: NextRequest) {
     const globalShardKey = getShardedGlobalRateKey("review:global", stableKey);
 
     // Prevent rapid session rotation abuse by requiring a short warm-up age.
-    if (getSessionAgeSeconds(request) < 8) {
+    if (getSessionAgeSeconds(request) < MIN_SESSION_AGE_SECONDS) {
       return NextResponse.json(
         { error: "Please wait a few seconds before submitting your first review." },
         { status: 429 }
       );
     }
-    if (getDeviceAgeSeconds(request) < 30) {
+    if (getDeviceAgeSeconds(request) < MIN_DEVICE_AGE_SECONDS) {
       return NextResponse.json(
         { error: "Please wait a short time before submitting from a new device." },
         { status: 429 }
@@ -114,9 +121,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (
-      !(await checkRateLimitPersistent(globalShardKey, 20, 15 * 60 * 1000)) || // sharded global cap
-      !(await checkRateLimitPersistent(globalKey, 6, 15 * 60 * 1000)) || // 6 reviews per 15 min
-      !(await checkRateLimitPersistent(unitKey, 2, 10 * 60 * 1000)) // 2 reviews per unit per 10 min
+      !(await checkRateLimitPersistent(globalShardKey, REVIEW_GLOBAL_SHARD_LIMIT, REVIEW_RATE_LIMIT_WINDOW_MS)) || // sharded global cap
+      !(await checkRateLimitPersistent(globalKey, REVIEW_PER_FINGERPRINT_LIMIT, REVIEW_RATE_LIMIT_WINDOW_MS)) || // per-device cap
+      !(await checkRateLimitPersistent(unitKey, REVIEW_PER_UNIT_LIMIT, REVIEW_PER_UNIT_WINDOW_MS)) // per-unit cap
     ) {
       return NextResponse.json(
         { error: "You are submitting reviews too quickly. Please wait and try again." },
@@ -135,7 +142,7 @@ export async function POST(request: NextRequest) {
 
     if (title.length < 3) {
       return NextResponse.json(
-        { error: "Review title must be at least 3 words." },
+        { error: "Review title must be at least 3 characters." },
         { status: 400 }
       );
     }
