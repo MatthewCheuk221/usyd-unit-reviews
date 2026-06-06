@@ -8,7 +8,7 @@ import {
 
 const LEVEL_COLORS: Record<BrowseCategory, string> = {
   undergraduate: "from-emerald-500 to-orange-500",
-  postgraduate: "from-violet-900 to-indigo-900",
+  postgraduate: "from-violet-900 to-blue-900",
 };
 
 export default function HomePage() {
