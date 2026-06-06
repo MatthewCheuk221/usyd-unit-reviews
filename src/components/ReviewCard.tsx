@@ -43,14 +43,14 @@ export function ReviewCard({ review }: { review: PublicReview }) {
         <GradeBadge grade={review.grade} />
       </div>
 
-      <div className="mt-4 grid gap-8 sm:grid-cols-2">
-        <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 text-sm">
+      <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-10">
+        <div className="grid grid-cols-[auto_auto] items-center gap-x-2 gap-y-2 text-sm">
           <RatingLabel align="left">Unit Content</RatingLabel>
           <StarDisplay value={review.ratingContent} />
           <RatingLabel align="left">Exam Difficulty</RatingLabel>
           <StarDisplay value={review.ratingExamDifficulty} />
         </div>
-        <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 text-sm">
+        <div className="grid grid-cols-[auto_auto] items-center gap-x-2 gap-y-2 text-sm">
           <RatingLabel align="right">Overall Workload</RatingLabel>
           <StarDisplay value={review.ratingWorkload} />
           <RatingLabel align="right">Final Result</RatingLabel>
@@ -89,7 +89,9 @@ function RatingLabel({
 }) {
   return (
     <span
-      className={`text-slate-500 ${align === "right" ? "text-right" : "text-left"}`}
+      className={`min-w-[7.75rem] text-slate-500 ${
+        align === "right" ? "text-right" : "text-left"
+      }`}
     >
       {children}
     </span>
