@@ -44,8 +44,8 @@ export function ReviewCard({ review }: { review: PublicReview }) {
       </div>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        <RatingRow label="Content" value={review.ratingContent} />
-        <RatingRow label="Workload" value={review.ratingWorkload} />
+        <RatingRow label="Unit Content" value={review.ratingContent} />
+        <RatingRow label="Overall Workload" value={review.ratingWorkload} />
         <RatingRow label="Exam Difficulty" value={review.ratingExamDifficulty} />
         <RatingRow label="Final Result" value={review.ratingFinalResult} />
       </div>
