@@ -18,6 +18,7 @@ const SCHEMA_SQL = `
     title TEXT NOT NULL,
     coordinator_name TEXT NOT NULL,
     lecturer_name TEXT NOT NULL,
+    tutor_name TEXT,
     year INTEGER NOT NULL,
     content TEXT NOT NULL,
     grade TEXT NOT NULL,
@@ -89,6 +90,11 @@ async function initSchema(db: Client): Promise<void> {
   } catch {
     // no-op
   }
+  try {
+    await db.execute("ALTER TABLE reviews ADD COLUMN tutor_name TEXT");
+  } catch {
+    // no-op
+  }
 }
 
 async function getClient(): Promise<Client> {
@@ -113,6 +119,7 @@ function rowToReview(row: Record<string, unknown>): Review {
     title: row.title as string,
     coordinatorName: row.coordinator_name as string,
     lecturerName: row.lecturer_name as string,
+    tutorName: (row.tutor_name as string | null | undefined) ?? "",
     year: Number(row.year),
     content: row.content as string,
     grade: row.grade as Review["grade"],
@@ -145,16 +152,17 @@ export async function createReview(input: ReviewInput): Promise<Review> {
 
   await db.execute({
     sql: `INSERT INTO reviews (
-      id, unit_code, title, coordinator_name, lecturer_name, year,
+      id, unit_code, title, coordinator_name, lecturer_name, tutor_name, year,
       content, grade, rating_content, rating_workload,
       rating_exam_difficulty, rating_final_result, reported_count, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       input.unitCode,
       input.title,
       input.coordinatorName,
       input.lecturerName,
+      input.tutorName ?? "",
       input.year,
       input.content,
       input.grade,
