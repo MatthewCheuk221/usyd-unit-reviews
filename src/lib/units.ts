@@ -49,13 +49,13 @@ export function getUnit(code: string): Unit | undefined {
 export function getBrowseCategoryCounts(): Record<BrowseCategory, number> {
   const counts: Record<BrowseCategory, number> = {
     undergraduate: 0,
-    level5plus: 0,
+    postgraduate: 0,
   };
   for (const unit of units) {
     if (UNDERGRADUATE_LEVELS.includes(unit.category)) {
       counts.undergraduate++;
     } else if (POSTGRADUATE_LEVELS.includes(unit.category)) {
-      counts.level5plus++;
+      counts.postgraduate++;
     }
   }
   return counts;
