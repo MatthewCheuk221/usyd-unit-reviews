@@ -37,6 +37,7 @@ export function ReviewCard({ review }: { review: PublicReview }) {
           <p className="mt-1 text-sm text-slate-500">
             {review.year} · Coordinator: {review.coordinatorName} · Lecturer:{" "}
             {review.lecturerName}
+            {review.tutorName ? ` · Tutor: ${review.tutorName}` : ""}
           </p>
         </div>
         <GradeBadge grade={review.grade} />
