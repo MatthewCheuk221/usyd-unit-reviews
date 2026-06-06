@@ -133,21 +133,50 @@ export async function POST(request: NextRequest) {
 
     const grade = typeof body.grade === "string" ? body.grade : "";
 
-    if (
-      title.length < 3 ||
-      coordinatorName.length < 1 ||
-      lecturerName.length < 1 ||
-      content.length < 10 ||
-      !VALID_GRADES.has(grade) ||
-      ratingContent === null ||
-      ratingWorkload === null ||
-      ratingExamDifficulty === null ||
-      ratingFinalResult === null
-    ) {
+    if (title.length < 3) {
       return NextResponse.json(
-        { error: "Invalid or missing required fields" },
+        { error: "Review title must be at least 3 characters." },
         { status: 400 }
       );
+    }
+    if (coordinatorName.length < 1) {
+      return NextResponse.json(
+        { error: "Coordinator name is required." },
+        { status: 400 }
+      );
+    }
+    if (lecturerName.length < 1) {
+      return NextResponse.json(
+        { error: "Lecturer name is required." },
+        { status: 400 }
+      );
+    }
+    if (content.length < 10) {
+      return NextResponse.json(
+        { error: "Review content must be at least 10 characters." },
+        { status: 400 }
+      );
+    }
+    if (!VALID_GRADES.has(grade)) {
+      return NextResponse.json({ error: "Invalid grade value." }, { status: 400 });
+    }
+    if (ratingContent === null) {
+      return NextResponse.json({ error: "Unit Content rating is required." }, { status: 400 });
+    }
+    if (ratingWorkload === null) {
+      return NextResponse.json(
+        { error: "Assignment Workload rating is required." },
+        { status: 400 }
+      );
+    }
+    if (ratingExamDifficulty === null) {
+      return NextResponse.json(
+        { error: "Exam Difficulty rating is required." },
+        { status: 400 }
+      );
+    }
+    if (ratingFinalResult === null) {
+      return NextResponse.json({ error: "Final Result rating is required." }, { status: 400 });
     }
 
     const input: ReviewInput = {
