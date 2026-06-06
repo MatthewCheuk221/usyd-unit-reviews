@@ -178,16 +178,19 @@ async function getOllamaModel(
   requireModel: boolean,
   cloudMode: boolean
 ): Promise<string> {
-  if (process.env.OLLAMA_MODEL?.trim()) {
-    return normalizeCloudModelName(process.env.OLLAMA_MODEL.trim(), cloudMode);
+  const configured = process.env.OLLAMA_MODEL?.trim();
+  if (configured) {
+    // Stick strictly to the designated model from the environment.
+    // No auto-discovery, no remapping, no validation against /api/tags.
+    return normalizeCloudModelName(configured, cloudMode);
   }
 
   if (requireModel) {
-    throw new Error(
-      "OLLAMA_MODEL must be set for Ollama Cloud (e.g. gpt-oss:20b)"
-    );
+    throw new Error("OLLAMA_MODEL must be set for Ollama Cloud");
   }
 
+  // Local convenience only (no OLLAMA_MODEL set): fall back to whatever the
+  // local server reports first. Designated model in .env takes precedence.
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 5000);
   try {
@@ -204,7 +207,7 @@ async function getOllamaModel(
     const model = data.models?.[0]?.name;
 
     if (!model) {
-      throw new Error("No local Ollama models installed");
+      throw new Error("No local Ollama models installed. Set OLLAMA_MODEL or pull one.");
     }
 
     return model;
@@ -287,9 +290,10 @@ async function summarizeWithOllama(
     content: sanitizeForLlm(r.content).slice(0, 1200),
   }));
 
-  const timeoutMs = config.cloudMode
-    ? CLOUD_REQUEST_TIMEOUT_MS
-    : LOCAL_REQUEST_TIMEOUT_MS;
+  const isLargeModel = /:(30b|70b|120b|671b)/i.test(model) || /30b|70b|120b/i.test(model);
+  const baseTimeout = config.cloudMode ? CLOUD_REQUEST_TIMEOUT_MS : LOCAL_REQUEST_TIMEOUT_MS;
+  const timeoutMs = isLargeModel ? Math.max(baseTimeout, config.cloudMode ? 90_000 : 120_000) : baseTimeout;
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -315,7 +319,7 @@ async function summarizeWithOllama(
 
     if (!response.ok) {
       const detail = await readOllamaError(response);
-      throw new Error(`Ollama chat failed: ${detail}`);
+      throw new Error(`Ollama chat failed for model '${model}': ${detail}`);
     }
 
     const data = (await response.json()) as Record<string, unknown>;
@@ -324,8 +328,8 @@ async function summarizeWithOllama(
     if (!content) {
       console.error("Ollama empty summary payload:", JSON.stringify(data).slice(0, 500));
       throw new Error(
-        `Ollama returned an empty summary for model "${model}". ` +
-          "On Vercel use gpt-oss:20b or gpt-oss:120b (not the -cloud suffix)."
+        `Ollama returned an empty summary for the designated model "${model}". ` +
+          "Verify the model is pulled/served by your Ollama instance and that it can produce non-empty output for the prompt."
       );
     }
 
