@@ -1,16 +1,13 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { UnitReviews } from "@/components/UnitReviews";
 import { getUnit } from "@/lib/units";
 import {
-  BROWSE_CATEGORIES,
   CATEGORY_LABELS,
   UNIT_LEVEL_LABELS,
+  normalizeBrowseCategorySlug,
   unitBelongsToBrowseCategory,
-  type BrowseCategory,
 } from "@/lib/types";
-
-const VALID_CATEGORIES = new Set<string>(BROWSE_CATEGORIES);
 
 export default async function UnitPage({
   params,
@@ -18,12 +15,15 @@ export default async function UnitPage({
   params: Promise<{ category: string; code: string }>;
 }) {
   const { category, code } = await params;
-
-  if (!VALID_CATEGORIES.has(category)) {
+  const browseCategory = normalizeBrowseCategorySlug(category);
+  if (!browseCategory) {
     notFound();
   }
 
-  const browseCategory = category as BrowseCategory;
+  if (category !== browseCategory) {
+    redirect(`/units/${browseCategory}/${code}`);
+  }
+
   const unit = getUnit(code);
 
   if (!unit || !unitBelongsToBrowseCategory(unit.category, browseCategory)) {
