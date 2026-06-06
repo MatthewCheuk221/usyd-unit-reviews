@@ -81,7 +81,7 @@ export function ReviewCard({ review }: { review: PublicReview }) {
 
 function RatingStars({ value }: { value: number }) {
   return (
-    <span className="pl-[200px]">
+    <span className="pl-[1200px]">
       <StarDisplay value={value} />
     </span>
   );
