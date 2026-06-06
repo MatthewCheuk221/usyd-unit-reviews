@@ -8,6 +8,75 @@ const SYSTEM_PROMPT =
   "Provide a concise, balanced summary of what students wrote. " +
   "Use bullet points. Note both positives and negatives when present.";
 
+const OLLAMA_CLOUD_HOST = "ollama.com";
+const LOCAL_OLLAMA_DEFAULT = "http://127.0.0.1:11434";
+const CLOUD_OLLAMA_DEFAULT = "https://ollama.com";
+
+interface OllamaConfig {
+  baseUrl: string;
+  headers: Record<string, string>;
+  requireModel: boolean;
+}
+
+function isProductionRuntime(): boolean {
+  return process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+}
+
+function buildOllamaHeaders(apiKey?: string): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+  return headers;
+}
+
+function assertAllowedOllamaHost(hostname: string, cloudMode: boolean): void {
+  const host = hostname.toLowerCase();
+  if (cloudMode) {
+    if (host !== OLLAMA_CLOUD_HOST) {
+      throw new Error("OLLAMA_BASE_URL must point to ollama.com in production");
+    }
+    return;
+  }
+
+  const allowedLocalHosts = new Set(["localhost", "127.0.0.1", "::1"]);
+  if (!allowedLocalHosts.has(host)) {
+    throw new Error("OLLAMA_BASE_URL must point to local Ollama in development");
+  }
+}
+
+function resolveOllamaConfig(): OllamaConfig | null {
+  const apiKey = process.env.OLLAMA_API_KEY?.trim();
+  const configuredBaseUrl = process.env.OLLAMA_BASE_URL?.trim();
+  const useCloud = isProductionRuntime() && Boolean(apiKey);
+
+  if (isProductionRuntime() && !apiKey) {
+    return null;
+  }
+
+  const baseUrl = configuredBaseUrl || (useCloud ? CLOUD_OLLAMA_DEFAULT : LOCAL_OLLAMA_DEFAULT);
+
+  try {
+    const parsed = new URL(baseUrl);
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      throw new Error("OLLAMA_BASE_URL must use http or https");
+    }
+    assertAllowedOllamaHost(parsed.hostname, useCloud);
+    return {
+      baseUrl: parsed.origin,
+      headers: buildOllamaHeaders(apiKey),
+      requireModel: useCloud,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Invalid OLLAMA_BASE_URL");
+  }
+}
+
 export async function summarizeReviews(
   _unitCode: string,
   unitName: string,
@@ -36,17 +105,24 @@ function buildReviewPrompt(unitName: string, reviews: Review[]): string {
   return `Summarize the following ${reviews.length} student reviews for ${unitName}:\n\n${reviewTexts}`;
 }
 
-async function getOllamaModel(baseUrl: string): Promise<string> {
+async function getOllamaModel(
+  baseUrl: string,
+  headers: Record<string, string>,
+  requireModel: boolean
+): Promise<string> {
   if (process.env.OLLAMA_MODEL) {
     return process.env.OLLAMA_MODEL;
   }
 
-  // Use the same timeout budget as the main chat call to prevent a hung
-  // Ollama process from stalling the summarize endpoint indefinitely.
+  if (requireModel) {
+    throw new Error("OLLAMA_MODEL must be set when using OLLAMA_API_KEY in production");
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 5000);
   try {
     const response = await fetch(`${baseUrl}/api/tags`, {
+      headers,
       signal: controller.signal,
     });
     if (!response.ok) {
@@ -67,9 +143,6 @@ async function getOllamaModel(baseUrl: string): Promise<string> {
 }
 
 function sanitizeForLlm(text: string): string {
-  // Strip XML-like tags to prevent prompt injection breakouts, ASCII control
-  // characters, and Unicode BiDi override characters that could confuse the LLM
-  // or misrepresent text direction in the model's output.
   return text
     .replace(/[<>]/g, "")
     .replace(/[\x00-\x1F\x7F]/g, " ")
@@ -92,41 +165,29 @@ async function summarizeWithOllama(
   unitName: string,
   reviews: Review[]
 ): Promise<string> {
-  let baseUrl = process.env.OLLAMA_BASE_URL ?? "http://127.0.0.1:11434";
-
-  // Strict SSRF protection: only allow explicit loopback addresses.
-  // We intentionally exclude "0.0.0.0" (all-interfaces bind address) and
-  // "*.local" mDNS wildcards — both can resolve to unexpected network targets
-  // in container or split-DNS environments.
-  try {
-    const u = new URL(baseUrl);
-    const host = u.hostname.toLowerCase();
-    const allowedHosts = new Set(["localhost", "127.0.0.1", "::1"]);
-    if (!allowedHosts.has(host)) {
-      baseUrl = "http://127.0.0.1:11434";
-    }
-    if (!["http:", "https:"].includes(u.protocol)) {
-      baseUrl = "http://127.0.0.1:11434";
-    }
-  } catch {
-    baseUrl = "http://127.0.0.1:11434";
+  const config = resolveOllamaConfig();
+  if (!config) {
+    throw new Error("OLLAMA_API_KEY is not configured for production");
   }
 
-  const model = await getOllamaModel(baseUrl);
+  const model = await getOllamaModel(
+    config.baseUrl,
+    config.headers,
+    config.requireModel
+  );
 
-  // Limit prompt size to reduce abuse / token cost / prompt injection surface
   const safeReviews = reviews.slice(0, 6).map((r) => ({
     ...r,
     content: sanitizeForLlm(r.content).slice(0, 1200),
   }));
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   try {
-    const response = await fetch(`${baseUrl}/api/chat`, {
+    const response = await fetch(`${config.baseUrl}/api/chat`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: config.headers,
       body: JSON.stringify({
         model,
         messages: [
