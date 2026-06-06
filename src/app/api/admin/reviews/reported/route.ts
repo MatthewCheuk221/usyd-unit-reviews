@@ -6,7 +6,7 @@ import { getClientFingerprint } from "@/lib/requestSecurity";
 export async function GET(request: NextRequest) {
   // Per-fingerprint throttle: limits any single client regardless of outcome.
   const fingerprint = getClientFingerprint(request);
-  if (!checkRateLimitPersistent(`admin:${fingerprint}`, 20, 15 * 60 * 1000)) {
+  if (!(await checkRateLimitPersistent(`admin:${fingerprint}`, 20, 15 * 60 * 1000))) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // Legitimate admins never touch it, so an attacker flooding bad tokens
     // cannot lock out the real moderator — they can only exhaust their own
     // per-fingerprint quota and the global failure allowance.
-    if (!checkRateLimitPersistent("admin:failures:global", 100, 15 * 60 * 1000)) {
+    if (!(await checkRateLimitPersistent("admin:failures:global", 100, 15 * 60 * 1000))) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -27,6 +27,6 @@ export async function GET(request: NextRequest) {
     : 100;
 
   return NextResponse.json({
-    reviews: getReportedReviews(limit),
+    reviews: await getReportedReviews(limit),
   });
 }
