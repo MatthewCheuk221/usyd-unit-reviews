@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
 
     if (title.length < 3) {
       return NextResponse.json(
-        { error: "Review title must be at least 3 characters." },
+        { error: "Review title must be at least 3 words." },
         { status: 400 }
       );
     }
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
     }
     if (content.length < 10) {
       return NextResponse.json(
-        { error: "Review content must be at least 10 characters." },
+        { error: "Review content must be at least 10 words." },
         { status: 400 }
       );
     }
