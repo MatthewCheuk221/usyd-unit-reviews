@@ -45,16 +45,16 @@ export function ReviewCard({ review }: { review: PublicReview }) {
 
       <div className="mt-4 grid grid-cols-[auto_auto_1fr_auto_auto] items-center gap-x-2 gap-y-2 text-sm">
         <span className="text-slate-500">Unit Content</span>
-        <StarDisplay value={review.ratingContent} />
+        <RatingStars value={review.ratingContent} />
         <span aria-hidden="true" />
         <span className="text-slate-500">Overall Workload</span>
-        <StarDisplay value={review.ratingWorkload} />
+        <RatingStars value={review.ratingWorkload} />
 
         <span className="text-slate-500">Exam Difficulty</span>
-        <StarDisplay value={review.ratingExamDifficulty} />
+        <RatingStars value={review.ratingExamDifficulty} />
         <span aria-hidden="true" />
         <span className="text-slate-500">Final Result</span>
-        <StarDisplay value={review.ratingFinalResult} />
+        <RatingStars value={review.ratingFinalResult} />
       </div>
 
       <p className="mt-4 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
@@ -76,5 +76,13 @@ export function ReviewCard({ review }: { review: PublicReview }) {
         </button>
       </div>
     </article>
+  );
+}
+
+function RatingStars({ value }: { value: number }) {
+  return (
+    <span className="pl-3">
+      <StarDisplay value={value} />
+    </span>
   );
 }
