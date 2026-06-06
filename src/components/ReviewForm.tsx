@@ -174,7 +174,7 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
             maxLength={120}
             value={tutorName}
             onChange={(e) => setTutorName(e.target.value)}
-            placeholder="Tutor name (optional)"
+            placeholder="Tutor name"
             className="input-field"
           />
         </Field>
