@@ -24,6 +24,7 @@ export interface Review {
   title: string;
   coordinatorName: string;
   lecturerName: string;
+  tutorName: string;
   year: number;
   content: string;
   grade: Grade;
@@ -41,6 +42,7 @@ export interface PublicReview {
   title: string;
   coordinatorName: string;
   lecturerName: string;
+  tutorName: string;
   year: number;
   content: string;
   grade: Grade;
@@ -56,6 +58,7 @@ export interface ReviewInput {
   title: string;
   coordinatorName: string;
   lecturerName: string;
+  tutorName: string;
   year: number;
   content: string;
   grade: Grade;
