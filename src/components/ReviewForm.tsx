@@ -225,7 +225,7 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
           required
         />
         <StarRating
-          label="Assignment Workload"
+          label="Overall Workload"
           value={ratingWorkload}
           onChange={setRatingWorkload}
           required
