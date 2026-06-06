@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       unitCode,
       summary: null,
       reviewCount: reviews.length,
-      message: "Summary is available if more than 1 review is posted.",
+      message: "Summary is available when more than 1 review is posted.",
     });
   }
 
