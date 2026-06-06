@@ -51,6 +51,24 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
     e.preventDefault();
     setError("");
 
+    const trimmedTitle = title.trim();
+    const trimmedCoordinator = coordinatorName.trim();
+    const trimmedLecturer = lecturerName.trim();
+    const trimmedContent = content.trim();
+    const trimmedTutor = tutorName.trim();
+
+    if (trimmedTitle.length < 3) {
+      setError("Review title must be at least 3 characters.");
+      return;
+    }
+    if (trimmedCoordinator.length < 1) {
+      setError("Coordinator name is required.");
+      return;
+    }
+    if (trimmedLecturer.length < 1) {
+      setError("Lecturer name is required.");
+      return;
+    }
     if (!grade) {
       setError("Please select your grade.");
       return;
@@ -74,12 +92,12 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           unitCode,
-          title,
-          coordinatorName,
-          lecturerName,
-          tutorName,
+          title: trimmedTitle,
+          coordinatorName: trimmedCoordinator,
+          lecturerName: trimmedLecturer,
+          tutorName: trimmedTutor,
           year,
-          content,
+          content: trimmedContent,
           grade,
           ratingContent,
           ratingWorkload,
