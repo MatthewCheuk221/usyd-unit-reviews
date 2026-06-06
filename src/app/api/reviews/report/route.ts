@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (
-      !checkRateLimitPersistent(globalShardKey, 40, 10 * 60 * 1000) ||
-      !checkRateLimitPersistent(`report:${rateLimitKey}`, 10, 10 * 60 * 1000)
+      !(await checkRateLimitPersistent(globalShardKey, 40, 10 * 60 * 1000)) ||
+      !(await checkRateLimitPersistent(`report:${rateLimitKey}`, 10, 10 * 60 * 1000))
     ) {
       return NextResponse.json(
         { error: "Too many reports. Please try again later." },
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     // Window check and insert are now atomic inside reportReviewWithHash,
     // eliminating the previous TOCTOU race between a separate check and insert.
-    const result = reportReviewWithHash(reviewId, reporterHash);
+    const result = await reportReviewWithHash(reviewId, reporterHash);
 
     if (result.windowExceeded) {
       return NextResponse.json(
