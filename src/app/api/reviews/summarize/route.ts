@@ -83,13 +83,32 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const summary = await summarizeReviews(unitCode, unit.name, reviews);
-  await setCachedSummary(unitCode, reviews.length, reviewHash, summary, SUMMARY_CACHE_TTL_MS);
+  try {
+    const result = await summarizeReviews(unitCode, unit.name, reviews);
 
-  return NextResponse.json({
-    unitCode,
-    summary,
-    reviewCount: reviews.length,
-    generatedAt: new Date().toISOString(),
-  });
+    // Only cache real AI output. Fallback excerpts should not be cached.
+    if (result.aiGenerated) {
+      await setCachedSummary(
+        unitCode,
+        reviews.length,
+        reviewHash,
+        result.summary,
+        SUMMARY_CACHE_TTL_MS
+      );
+    }
+
+    return NextResponse.json({
+      unitCode,
+      summary: result.summary,
+      reviewCount: reviews.length,
+      generatedAt: new Date().toISOString(),
+      aiGenerated: result.aiGenerated,
+      warning: result.warning,
+    });
+  } catch (error) {
+    console.error("Failed to generate AI summary:", error);
+    const message =
+      error instanceof Error ? error.message : "Failed to generate AI summary";
+    return NextResponse.json({ error: message }, { status: 503 });
+  }
 }
