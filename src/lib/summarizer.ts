@@ -164,13 +164,22 @@ function buildReviewPrompt(unitName: string, reviews: Review[]): string {
   return `Summarize the following ${reviews.length} student reviews for ${unitName}:\n\n${reviewTexts}`;
 }
 
+function normalizeCloudModelName(model: string, cloudMode: boolean): string {
+  if (!cloudMode) return model;
+
+  // Local Ollama uses names like gpt-oss:20b-cloud. The direct ollama.com API
+  // expects gpt-oss:20b (see https://ollama.com/api/tags).
+  return model.replace(/-cloud$/i, "");
+}
+
 async function getOllamaModel(
   baseUrl: string,
   headers: Record<string, string>,
-  requireModel: boolean
+  requireModel: boolean,
+  cloudMode: boolean
 ): Promise<string> {
   if (process.env.OLLAMA_MODEL?.trim()) {
-    return process.env.OLLAMA_MODEL.trim();
+    return normalizeCloudModelName(process.env.OLLAMA_MODEL.trim(), cloudMode);
   }
 
   if (requireModel) {
@@ -269,7 +278,8 @@ async function summarizeWithOllama(
   const model = await getOllamaModel(
     config.baseUrl,
     config.headers,
-    config.requireModel
+    config.requireModel,
+    config.cloudMode
   );
 
   const safeReviews = reviews.slice(0, 6).map((r) => ({
@@ -314,7 +324,8 @@ async function summarizeWithOllama(
     if (!content) {
       console.error("Ollama empty summary payload:", JSON.stringify(data).slice(0, 500));
       throw new Error(
-        "Ollama returned an empty summary. Check OLLAMA_MODEL is a valid cloud model."
+        `Ollama returned an empty summary for model "${model}". ` +
+          "On Vercel use gpt-oss:20b or gpt-oss:120b (not the -cloud suffix)."
       );
     }
 
