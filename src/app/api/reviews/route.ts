@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
     }
     if (ratingWorkload === null) {
       return NextResponse.json(
-        { error: "Assignment Workload rating is required." },
+        { error: "Overall Workload rating is required." },
         { status: 400 }
       );
     }
