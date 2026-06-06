@@ -1,0 +1,752 @@
+[
+  {
+    "code": "DATA1001",
+    "name": "Foundations of Data Science",
+    "category": "level1",
+    "order": 0
+  },
+  {
+    "code": "DATA1901",
+    "name": "Foundations of Data Science (Advanced)",
+    "category": "level1",
+    "order": 1
+  },
+  {
+    "code": "DATA1002",
+    "name": "Informatics: Data and Computation",
+    "category": "level1",
+    "order": 2
+  },
+  {
+    "code": "DATA1902",
+    "name": "Informatics: Data and Computation (Advanced)",
+    "category": "level1",
+    "order": 3
+  },
+  {
+    "code": "ELEC1601",
+    "name": "Introduction to Computer Systems",
+    "category": "level1",
+    "order": 4
+  },
+  {
+    "code": "INFO1110",
+    "name": "Introduction to Programming",
+    "category": "level1",
+    "order": 5
+  },
+  {
+    "code": "INFO1910",
+    "name": "Introduction to Programming (Advanced)",
+    "category": "level1",
+    "order": 6
+  },
+  {
+    "code": "INFO1111",
+    "name": "Computing 1A Professionalism",
+    "category": "level1",
+    "order": 7
+  },
+  {
+    "code": "INFO1112",
+    "name": "Computing 1B OS and Network Platforms",
+    "category": "level1",
+    "order": 8
+  },
+  {
+    "code": "INFO1113",
+    "name": "Object-oriented Programming",
+    "category": "level1",
+    "order": 9
+  },
+  {
+    "code": "MATH1061",
+    "name": "Mathematics 1A",
+    "category": "level1",
+    "order": 10
+  },
+  {
+    "code": "MATH1961",
+    "name": "Mathematics 1A (Advanced)",
+    "category": "level1",
+    "order": 11
+  },
+  {
+    "code": "MATH1062",
+    "name": "Mathematics 1B",
+    "category": "level1",
+    "order": 12
+  },
+  {
+    "code": "MATH1962",
+    "name": "Mathematics 1B (Advanced)",
+    "category": "level1",
+    "order": 13
+  },
+  {
+    "code": "MATH1064",
+    "name": "Discrete Mathematics for Computation",
+    "category": "level1",
+    "order": 14
+  },
+  {
+    "code": "MATH1964",
+    "name": "Discrete Mathematics for Computation (Advanced)",
+    "category": "level1",
+    "order": 15
+  },
+  {
+    "code": "COMP2017",
+    "name": "Systems Programming",
+    "category": "level2",
+    "order": 16
+  },
+  {
+    "code": "COMP2022",
+    "name": "Models of Computation",
+    "category": "level2",
+    "order": 17
+  },
+  {
+    "code": "COMP2922",
+    "name": "Models of Computation (Advanced)",
+    "category": "level2",
+    "order": 18
+  },
+  {
+    "code": "COMP2123",
+    "name": "Data Structures and Algorithms",
+    "category": "level2",
+    "order": 19
+  },
+  {
+    "code": "COMP2823",
+    "name": "Data Structures and Algorithms (Advanced)",
+    "category": "level2",
+    "order": 20
+  },
+  {
+    "code": "DATA2001",
+    "name": "Data Science, Big Data and Data Variety",
+    "category": "level2",
+    "order": 21
+  },
+  {
+    "code": "DATA2901",
+    "name": "Data Science, Big Data and Data Variety (Advanced)",
+    "category": "level2",
+    "order": 22
+  },
+  {
+    "code": "DATA2002",
+    "name": "Data Analytics: Learning from Data",
+    "category": "level2",
+    "order": 23
+  },
+  {
+    "code": "DATA2902",
+    "name": "Data Analytics: Learning from Data (Advanced)",
+    "category": "level2",
+    "order": 24
+  },
+  {
+    "code": "INFO2222",
+    "name": "Computing 2 Usability and Security",
+    "category": "level2",
+    "order": 25
+  },
+  {
+    "code": "ISYS2110",
+    "name": "Analysis and Design of Web Info Systems",
+    "category": "level2",
+    "order": 26
+  },
+  {
+    "code": "ISYS2120",
+    "name": "Data and Information Management",
+    "category": "level2",
+    "order": 27
+  },
+  {
+    "code": "MATH2069",
+    "name": "Discrete Mathematics and Graph Theory",
+    "category": "level2",
+    "order": 28
+  },
+  {
+    "code": "SOFT2201",
+    "name": "Software Construction and Design 1",
+    "category": "level2",
+    "order": 29
+  },
+  {
+    "code": "SOFT2412",
+    "name": "Agile Software Development Practices",
+    "category": "level2",
+    "order": 30
+  },
+  {
+    "code": "COMP3027",
+    "name": "Algorithm Design",
+    "category": "level3",
+    "order": 31
+  },
+  {
+    "code": "COMP3927",
+    "name": "Algorithm Design (Advanced)",
+    "category": "level3",
+    "order": 32
+  },
+  {
+    "code": "COMP3221",
+    "name": "Distributed Systems",
+    "category": "level3",
+    "order": 33
+  },
+  {
+    "code": "COMP3308",
+    "name": "Introduction to Artificial Intelligence",
+    "category": "level3",
+    "order": 34
+  },
+  {
+    "code": "COMP3608",
+    "name": "Introduction to Artificial Intelligence (Advanced)",
+    "category": "level3",
+    "order": 35
+  },
+  {
+    "code": "COMP3419",
+    "name": "Graphics and Multimedia",
+    "category": "level3",
+    "order": 36
+  },
+  {
+    "code": "COMP3520",
+    "name": "Operating Systems Internals",
+    "category": "level3",
+    "order": 37
+  },
+  {
+    "code": "CSEC3616",
+    "name": "Cybersecurity Engineering",
+    "category": "level3",
+    "order": 38
+  },
+  {
+    "code": "DATA3404",
+    "name": "Scalable Data Management",
+    "category": "level3",
+    "order": 39
+  },
+  {
+    "code": "DATA3406",
+    "name": "Human-in-the-Loop Data Analytics",
+    "category": "level3",
+    "order": 40
+  },
+  {
+    "code": "ELEC3506",
+    "name": "Communications Networks",
+    "category": "level3",
+    "order": 41
+  },
+  {
+    "code": "INFO3315",
+    "name": "Human-Computer Interaction",
+    "category": "level3",
+    "order": 42
+  },
+  {
+    "code": "INFO3333",
+    "name": "Computing 3 Management",
+    "category": "level3",
+    "order": 43
+  },
+  {
+    "code": "SOFT3202",
+    "name": "Software Construction and Design 2",
+    "category": "level3",
+    "order": 44
+  },
+  {
+    "code": "INFO4444",
+    "name": "Computing 4 Innovation",
+    "category": "level4",
+    "order": 45
+  },
+  {
+    "code": "INFO4990",
+    "name": "Computer Science Research Methods",
+    "category": "level4",
+    "order": 46
+  },
+  {
+    "code": "INFO4994",
+    "name": "AI Literacy and Competency",
+    "category": "level4",
+    "order": 47
+  },
+  {
+    "code": "BIDH5000",
+    "name": "Digital Health Innovation and Implementation",
+    "category": "level5",
+    "order": 48
+  },
+  {
+    "code": "BIDH5003",
+    "name": "Foundations of Digital Health",
+    "category": "level5",
+    "order": 49
+  },
+  {
+    "code": "COMP5045",
+    "name": "Computational Geometry",
+    "category": "level5",
+    "order": 50
+  },
+  {
+    "code": "COMP5046",
+    "name": "Natural Language Processing",
+    "category": "level5",
+    "order": 51
+  },
+  {
+    "code": "COMP5047",
+    "name": "Pervasive Computing",
+    "category": "level5",
+    "order": 52
+  },
+  {
+    "code": "COMP5048",
+    "name": "Visual Analytics",
+    "category": "level5",
+    "order": 53
+  },
+  {
+    "code": "COMP5216",
+    "name": "Mobile Computing",
+    "category": "level5",
+    "order": 54
+  },
+  {
+    "code": "COMP5270",
+    "name": "Randomised and Advanced Algorithms",
+    "category": "level5",
+    "order": 55
+  },
+  {
+    "code": "COMP5310",
+    "name": "Principles of Data Science",
+    "category": "level5",
+    "order": 56
+  },
+  {
+    "code": "COMP5313",
+    "name": "Large-scale Networks",
+    "category": "level5",
+    "order": 57
+  },
+  {
+    "code": "COMP5318",
+    "name": "Machine Learning and Data Mining",
+    "category": "level5",
+    "order": 58
+  },
+  {
+    "code": "COMP5328",
+    "name": "Advanced Machine Learning",
+    "category": "level5",
+    "order": 59
+  },
+  {
+    "code": "COMP5329",
+    "name": "Deep Learning",
+    "category": "level5",
+    "order": 60
+  },
+  {
+    "code": "COMP5338",
+    "name": "Advanced Data Models",
+    "category": "level5",
+    "order": 61
+  },
+  {
+    "code": "COMP5339",
+    "name": "Data Engineering",
+    "category": "level5",
+    "order": 62
+  },
+  {
+    "code": "COMP5347",
+    "name": "Web Application Development",
+    "category": "level5",
+    "order": 63
+  },
+  {
+    "code": "COMP5348",
+    "name": "Enterprise-scale Software Architecture",
+    "category": "level5",
+    "order": 64
+  },
+  {
+    "code": "COMP5349",
+    "name": "Cloud Computing",
+    "category": "level5",
+    "order": 65
+  },
+  {
+    "code": "COMP5405",
+    "name": "Digital Media Computing",
+    "category": "level5",
+    "order": 66
+  },
+  {
+    "code": "COMP5415",
+    "name": "Multimedia Design and Authoring",
+    "category": "level5",
+    "order": 67
+  },
+  {
+    "code": "COMP5416",
+    "name": "Advanced Network Technologies",
+    "category": "level5",
+    "order": 68
+  },
+  {
+    "code": "COMP5424",
+    "name": "Information Technology in Biomedicine",
+    "category": "level5",
+    "order": 69
+  },
+  {
+    "code": "COMP5425",
+    "name": "Multimedia Retrieval",
+    "category": "level5",
+    "order": 70
+  },
+  {
+    "code": "COMP5426",
+    "name": "Parallel and Distributed Computing",
+    "category": "level5",
+    "order": 71
+  },
+  {
+    "code": "COMP5427",
+    "name": "Usability Engineering",
+    "category": "level5",
+    "order": 72
+  },
+  {
+    "code": "COMP5530",
+    "name": "Discrete Optimisation",
+    "category": "level5",
+    "order": 73
+  },
+  {
+    "code": "COMP5617",
+    "name": "Empirical Security Analysis and Engineering",
+    "category": "level5",
+    "order": 74
+  },
+  {
+    "code": "COMP5618",
+    "name": "Applied Cybersecurity",
+    "category": "level5",
+    "order": 75
+  },
+  {
+    "code": "CSEC5614",
+    "name": "Data Privacy: Theory and Practice",
+    "category": "level5",
+    "order": 76
+  },
+  {
+    "code": "CSEC5615",
+    "name": "Cloud Security",
+    "category": "level5",
+    "order": 77
+  },
+  {
+    "code": "CSEC5616",
+    "name": "Cybersecurity Engineering",
+    "category": "level5",
+    "order": 78
+  },
+  {
+    "code": "CSEC5619",
+    "name": "Applied Cryptography",
+    "category": "level5",
+    "order": 79
+  },
+  {
+    "code": "CSYS5010",
+    "name": "Introduction to Complex Systems",
+    "category": "level5",
+    "order": 80
+  },
+  {
+    "code": "CSYS5030",
+    "name": "Information Theory and Self-organization",
+    "category": "level5",
+    "order": 81
+  },
+  {
+    "code": "DATA5207",
+    "name": "Data Analysis in the Social Sciences",
+    "category": "level5",
+    "order": 82
+  },
+  {
+    "code": "ELEC5304",
+    "name": "Intelligent Visual Signal Understanding",
+    "category": "level5",
+    "order": 83
+  },
+  {
+    "code": "ELEC5305",
+    "name": "Acoustics, Speech, and Signal Processing",
+    "category": "level5",
+    "order": 84
+  },
+  {
+    "code": "ELEC5306",
+    "name": "Video Intelligence and Compression",
+    "category": "level5",
+    "order": 85
+  },
+  {
+    "code": "ELEC5307",
+    "name": "Advanced Signal Processing with Deep Learning",
+    "category": "level5",
+    "order": 86
+  },
+  {
+    "code": "ELEC5308",
+    "name": "Intelligent Information Engineering Practice",
+    "category": "level5",
+    "order": 87
+  },
+  {
+    "code": "ELEC5507",
+    "name": "Error Control Coding",
+    "category": "level5",
+    "order": 88
+  },
+  {
+    "code": "ELEC5508",
+    "name": "Wireless Engineering",
+    "category": "level5",
+    "order": 89
+  },
+  {
+    "code": "ELEC5509",
+    "name": "Mobile Networks",
+    "category": "level5",
+    "order": 90
+  },
+  {
+    "code": "ELEC5510",
+    "name": "Satellite Communication Systems",
+    "category": "level5",
+    "order": 91
+  },
+  {
+    "code": "ELEC5514",
+    "name": "IoT Wireless Sensing and Networking",
+    "category": "level5",
+    "order": 92
+  },
+  {
+    "code": "ELEC5517",
+    "name": "Software-defined Networks",
+    "category": "level5",
+    "order": 93
+  },
+  {
+    "code": "ELEC5616",
+    "name": "Computer and Network Security",
+    "category": "level5",
+    "order": 94
+  },
+  {
+    "code": "ELEC5618",
+    "name": "Software Quality Engineering",
+    "category": "level5",
+    "order": 95
+  },
+  {
+    "code": "ELEC5619",
+    "name": "Object-oriented Application Frameworks",
+    "category": "level5",
+    "order": 96
+  },
+  {
+    "code": "ELEC5620",
+    "name": "Model-based Software Engineering",
+    "category": "level5",
+    "order": 97
+  },
+  {
+    "code": "ELEC5622",
+    "name": "Signals, Software, and Health",
+    "category": "level5",
+    "order": 98
+  },
+  {
+    "code": "ELEC5623",
+    "name": "Applied Generative AI in Engineering",
+    "category": "level5",
+    "order": 99
+  },
+  {
+    "code": "HTIN5005",
+    "name": "Applied Healthcare Data Science",
+    "category": "level5",
+    "order": 100
+  },
+  {
+    "code": "HTIN5006",
+    "name": "Foundations of Healthcare Data Science",
+    "category": "level5",
+    "order": 101
+  },
+  {
+    "code": "INFO5060",
+    "name": "Data Analytics and Business Intelligence",
+    "category": "level5",
+    "order": 102
+  },
+  {
+    "code": "INFO5301",
+    "name": "Information Security Management",
+    "category": "level5",
+    "order": 103
+  },
+  {
+    "code": "INFO5990",
+    "name": "Professional Practice in IT",
+    "category": "level5",
+    "order": 104
+  },
+  {
+    "code": "INFO5992",
+    "name": "Understanding IT Innovations",
+    "category": "level5",
+    "order": 105
+  },
+  {
+    "code": "INFO5995",
+    "name": "Introduction to Cybersecurity",
+    "category": "level5",
+    "order": 106
+  },
+  {
+    "code": "STAT5002",
+    "name": "Introduction to Statistics",
+    "category": "level5",
+    "order": 107
+  },
+  {
+    "code": "STAT5003",
+    "name": "Computational Statistical Methods",
+    "category": "level5",
+    "order": 108
+  },
+  {
+    "code": "CISS6022",
+    "name": "Cybersecurity",
+    "category": "level6",
+    "order": 109
+  },
+  {
+    "code": "INFO6007",
+    "name": "Project Management in IT",
+    "category": "level6",
+    "order": 110
+  },
+  {
+    "code": "COMP9001",
+    "name": "Introduction to Programming",
+    "category": "level9",
+    "order": 111
+  },
+  {
+    "code": "COMP9003",
+    "name": "Object-oriented Programming",
+    "category": "level9",
+    "order": 112
+  },
+  {
+    "code": "COMP9017",
+    "name": "Systems Programming",
+    "category": "level9",
+    "order": 113
+  },
+  {
+    "code": "COMP9110",
+    "name": "System Analysis and Modelling",
+    "category": "level9",
+    "order": 114
+  },
+  {
+    "code": "COMP9120",
+    "name": "Database Management Systems",
+    "category": "level9",
+    "order": 115
+  },
+  {
+    "code": "COMP9121",
+    "name": "Design of Networks and Distributed Systems",
+    "category": "level9",
+    "order": 116
+  },
+  {
+    "code": "COMP9123",
+    "name": "Data Structures and Algorithms",
+    "category": "level9",
+    "order": 117
+  },
+  {
+    "code": "COMP9201",
+    "name": "Software Construction and Design 1",
+    "category": "level9",
+    "order": 118
+  },
+  {
+    "code": "COMP9202",
+    "name": "Software Construction and Design 2",
+    "category": "level9",
+    "order": 119
+  },
+  {
+    "code": "COMP9208",
+    "name": "Artificial Intelligence and Society",
+    "category": "level9",
+    "order": 120
+  },
+  {
+    "code": "COMP9412",
+    "name": "Agile Software Development Practices",
+    "category": "level9",
+    "order": 121
+  },
+  {
+    "code": "COMP9601",
+    "name": "Computer and Network Organisation",
+    "category": "level9",
+    "order": 122
+  },
+  {
+    "code": "ELEC9601",
+    "name": "Computer Systems",
+    "category": "level9",
+    "order": 123
+  },
+  {
+    "code": "IDEA9106",
+    "name": "Design Thinking",
+    "category": "level9",
+    "order": 124
+  }
+]

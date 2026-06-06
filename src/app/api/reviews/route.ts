@@ -1,0 +1,172 @@
+import { NextRequest, NextResponse } from "next/server";
+import {
+  checkRateLimitPersistent,
+  createReview,
+  getReviewsByUnit,
+} from "@/lib/db";
+import { getUnit } from "@/lib/units";
+import {
+  assertAllowedOrigin,
+  getDeviceAgeSeconds,
+  getSessionAgeSeconds,
+  readLimitedJson,
+  getStableClientFingerprint,
+  getShardedGlobalRateKey,
+} from "@/lib/requestSecurity";
+import type { Grade, PublicReview, ReviewInput } from "@/lib/types";
+import { GRADES, YEARS } from "@/lib/types";
+
+const VALID_GRADES = new Set<string>(GRADES);
+
+function cleanText(value: unknown, maxLength: number): string {
+  const str = typeof value === "string" ? value : String(value ?? "");
+  return str
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // ASCII control characters (preserving \t, \n, \r)
+    .replace(/[\u202A-\u202E\u2066-\u2069\u200B-\u200F\uFEFF]/g, "") // Unicode BiDi overrides, zero-width chars, BOM
+    .trim()
+    .slice(0, maxLength);
+}
+
+function validateRating(value: unknown): number | null {
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1 || n > 5) {
+    return null;
+  }
+  return n;
+}
+
+export async function GET(request: NextRequest) {
+  const unitCode = request.nextUrl.searchParams.get("unitCode") ?? "";
+  if (!unitCode) {
+    return NextResponse.json({ error: "unitCode is required" }, { status: 400 });
+  }
+
+  // Validate the unit code exists — prevents probing arbitrary strings
+  if (!getUnit(unitCode)) {
+    return NextResponse.json({ error: "Unit not found" }, { status: 404 });
+  }
+
+  // Light rate limiting to prevent bulk enumeration / scraping
+  const fingerprint = getStableClientFingerprint(request);
+  const shardKey = getShardedGlobalRateKey("get:reviews:global", fingerprint);
+  if (
+    !checkRateLimitPersistent(shardKey, 120, 60 * 1000) ||
+    !checkRateLimitPersistent(`get:reviews:${fingerprint}`, 60, 60 * 1000)
+  ) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const reviews = getReviewsByUnit(unitCode);
+  const safe: PublicReview[] = reviews.map(({ reportedCount: _ignored, ...rest }) => rest);
+  return NextResponse.json(safe);
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const originCheck = assertAllowedOrigin(request);
+    if (!originCheck.ok) {
+      return NextResponse.json({ error: originCheck.error }, { status: 403 });
+    }
+
+    const parsed = await readLimitedJson(request, 16 * 1024);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: parsed.status });
+    }
+    const body = parsed.data;
+
+    const ratingContent = validateRating(body.ratingContent);
+    const ratingWorkload = validateRating(body.ratingWorkload);
+    const ratingExamDifficulty = validateRating(body.ratingExamDifficulty);
+    const ratingFinalResult = validateRating(body.ratingFinalResult);
+
+    const year = Number(body.year);
+    const currentYear = new Date().getFullYear();
+    if (!YEARS.includes(year) || year > currentYear) {
+      return NextResponse.json({ error: "Invalid year" }, { status: 400 });
+    }
+
+    // Validate that the unit actually exists
+    const unitCode = cleanText(body.unitCode, 20);
+    if (!getUnit(unitCode)) {
+      return NextResponse.json({ error: "Invalid unit code" }, { status: 400 });
+    }
+
+    // Rate limiting — use stable device fingerprint throughout so that session
+    // rotation cannot bypass the per-user or global caps. The device-age warmup
+    // below provides the corresponding identity-churn deterrent.
+    const stableKey = getStableClientFingerprint(request);
+    const globalKey = `review:global:${stableKey}`;
+    const unitKey = `review:unit:${stableKey}:${unitCode}`;
+    const globalShardKey = getShardedGlobalRateKey("review:global", stableKey);
+
+    // Prevent rapid session rotation abuse by requiring a short warm-up age.
+    if (getSessionAgeSeconds(request) < 8) {
+      return NextResponse.json(
+        { error: "Please wait a few seconds before submitting your first review." },
+        { status: 429 }
+      );
+    }
+    if (getDeviceAgeSeconds(request) < 30) {
+      return NextResponse.json(
+        { error: "Please wait a short time before submitting from a new device." },
+        { status: 429 }
+      );
+    }
+
+    if (
+      !checkRateLimitPersistent(globalShardKey, 20, 15 * 60 * 1000) || // sharded global cap
+      !checkRateLimitPersistent(globalKey, 6, 15 * 60 * 1000) || // 6 reviews per 15 min
+      !checkRateLimitPersistent(unitKey, 2, 10 * 60 * 1000) // 2 reviews per unit per 10 min
+    ) {
+      return NextResponse.json(
+        { error: "You are submitting reviews too quickly. Please wait and try again." },
+        { status: 429 }
+      );
+    }
+
+    // Sanitize and enforce lengths
+    const title = cleanText(body.title, 200);
+    const coordinatorName = cleanText(body.coordinatorName, 120);
+    const lecturerName = cleanText(body.lecturerName, 120);
+    const content = cleanText(body.content, 4000);
+
+    const grade = typeof body.grade === "string" ? body.grade : "";
+
+    if (
+      title.length < 3 ||
+      coordinatorName.length < 1 ||
+      lecturerName.length < 1 ||
+      content.length < 10 ||
+      !VALID_GRADES.has(grade) ||
+      ratingContent === null ||
+      ratingWorkload === null ||
+      ratingExamDifficulty === null ||
+      ratingFinalResult === null
+    ) {
+      return NextResponse.json(
+        { error: "Invalid or missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const input: ReviewInput = {
+      unitCode,
+      title,
+      coordinatorName,
+      lecturerName,
+      year,
+      content,
+      grade: grade as Grade,
+      ratingContent,
+      ratingWorkload,
+      ratingExamDifficulty,
+      ratingFinalResult,
+    };
+
+    const review = createReview(input);
+    return NextResponse.json(review, { status: 201 });
+  } catch (error) {
+    console.error("Failed to create review:", error);
+    return NextResponse.json({ error: "Failed to create review" }, { status: 500 });
+  }
+}
