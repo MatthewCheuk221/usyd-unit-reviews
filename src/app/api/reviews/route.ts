@@ -50,13 +50,13 @@ export async function GET(request: NextRequest) {
   const fingerprint = getStableClientFingerprint(request);
   const shardKey = getShardedGlobalRateKey("get:reviews:global", fingerprint);
   if (
-    !checkRateLimitPersistent(shardKey, 120, 60 * 1000) ||
-    !checkRateLimitPersistent(`get:reviews:${fingerprint}`, 60, 60 * 1000)
+    !(await checkRateLimitPersistent(shardKey, 120, 60 * 1000)) ||
+    !(await checkRateLimitPersistent(`get:reviews:${fingerprint}`, 60, 60 * 1000))
   ) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const reviews = getReviewsByUnit(unitCode);
+  const reviews = await getReviewsByUnit(unitCode);
   const safe: PublicReview[] = reviews.map(({ reportedCount: _ignored, ...rest }) => rest);
   return NextResponse.json(safe);
 }
@@ -114,9 +114,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (
-      !checkRateLimitPersistent(globalShardKey, 20, 15 * 60 * 1000) || // sharded global cap
-      !checkRateLimitPersistent(globalKey, 6, 15 * 60 * 1000) || // 6 reviews per 15 min
-      !checkRateLimitPersistent(unitKey, 2, 10 * 60 * 1000) // 2 reviews per unit per 10 min
+      !(await checkRateLimitPersistent(globalShardKey, 20, 15 * 60 * 1000)) || // sharded global cap
+      !(await checkRateLimitPersistent(globalKey, 6, 15 * 60 * 1000)) || // 6 reviews per 15 min
+      !(await checkRateLimitPersistent(unitKey, 2, 10 * 60 * 1000)) // 2 reviews per unit per 10 min
     ) {
       return NextResponse.json(
         { error: "You are submitting reviews too quickly. Please wait and try again." },
@@ -163,10 +163,14 @@ export async function POST(request: NextRequest) {
       ratingFinalResult,
     };
 
-    const review = createReview(input);
+    const review = await createReview(input);
     return NextResponse.json(review, { status: 201 });
   } catch (error) {
     console.error("Failed to create review:", error);
-    return NextResponse.json({ error: "Failed to create review" }, { status: 500 });
+    const message =
+      error instanceof Error && error.message.includes("TURSO_DATABASE_URL")
+        ? "Database is not configured for production hosting."
+        : "Failed to create review";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
