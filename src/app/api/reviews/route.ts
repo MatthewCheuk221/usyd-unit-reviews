@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
     const title = cleanText(body.title, 200);
     const coordinatorName = cleanText(body.coordinatorName, 120);
     const lecturerName = cleanText(body.lecturerName, 120);
+    const tutorName = cleanText(body.tutorName, 120);
     const content = cleanText(body.content, 4000);
 
     const grade = typeof body.grade === "string" ? body.grade : "";
@@ -154,6 +155,7 @@ export async function POST(request: NextRequest) {
       title,
       coordinatorName,
       lecturerName,
+      tutorName,
       year,
       content,
       grade: grade as Grade,
