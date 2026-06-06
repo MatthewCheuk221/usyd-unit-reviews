@@ -43,7 +43,7 @@ export function ReviewCard({ review }: { review: PublicReview }) {
         <GradeBadge grade={review.grade} />
       </div>
 
-      <div className="mt-4 grid gap-x-48 gap-y-2 text-sm sm:grid-cols-2">
+      <div className="mt-4 grid gap-x-40 gap-y-2 text-sm sm:grid-cols-2">
         <div className="space-y-2">
           <RatingRow label="Unit Content" value={review.ratingContent} />
           <RatingRow label="Exam Difficulty" value={review.ratingExamDifficulty} />
