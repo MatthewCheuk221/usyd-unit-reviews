@@ -50,20 +50,20 @@ export async function GET(request: NextRequest) {
     );
   }
   if (
-    !checkRateLimitPersistent(globalShardKey, 25, 60 * 1000) ||
-    !checkRateLimitPersistent(`get:summarize:${fingerprint}`, 10, 60 * 1000)
+    !(await checkRateLimitPersistent(globalShardKey, 25, 60 * 1000)) ||
+    !(await checkRateLimitPersistent(`get:summarize:${fingerprint}`, 10, 60 * 1000))
   ) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const reviews = getReviewsByUnit(unitCode);
+  const reviews = await getReviewsByUnit(unitCode);
 
   if (reviews.length <= 1) {
     return NextResponse.json({
       unitCode,
       summary: null,
       reviewCount: reviews.length,
-      message: "Summary will be available if more than 1 review is posted.",
+      message: "Summary is available if more than 1 review is posted.",
     });
   }
 
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     .update(reviews.map((r) => `${r.id}|${r.createdAt}|${r.content}`).join("\n"))
     .digest("hex");
   if (!forceRefresh) {
-    const cached = getCachedSummary(unitCode, reviews.length, reviewHash);
+    const cached = await getCachedSummary(unitCode, reviews.length, reviewHash);
     if (cached) {
       return NextResponse.json({
         unitCode,
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
   }
 
   const summary = await summarizeReviews(unitCode, unit.name, reviews);
-  setCachedSummary(unitCode, reviews.length, reviewHash, summary, SUMMARY_CACHE_TTL_MS);
+  await setCachedSummary(unitCode, reviews.length, reviewHash, summary, SUMMARY_CACHE_TTL_MS);
 
   return NextResponse.json({
     unitCode,
