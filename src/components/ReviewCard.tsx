@@ -43,11 +43,21 @@ export function ReviewCard({ review }: { review: PublicReview }) {
         <GradeBadge grade={review.grade} />
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        <RatingRow label="Unit Content" value={review.ratingContent} />
-        <RatingRow label="Overall Workload" value={review.ratingWorkload} />
-        <RatingRow label="Exam Difficulty" value={review.ratingExamDifficulty} />
-        <RatingRow label="Final Result" value={review.ratingFinalResult} />
+      <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-10">
+        <RatingGroup
+          rows={[
+            { label: "Unit Content", value: review.ratingContent },
+            { label: "Exam Difficulty", value: review.ratingExamDifficulty },
+          ]}
+          align="left"
+        />
+        <RatingGroup
+          rows={[
+            { label: "Overall Workload", value: review.ratingWorkload },
+            { label: "Final Result", value: review.ratingFinalResult },
+          ]}
+          align="right"
+        />
       </div>
 
       <p className="mt-4 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
@@ -72,11 +82,41 @@ export function ReviewCard({ review }: { review: PublicReview }) {
   );
 }
 
-function RatingRow({ label, value }: { label: string; value: number }) {
+function RatingGroup({
+  rows,
+  align,
+}: {
+  rows: { label: string; value: number }[];
+  align: "left" | "right";
+}) {
   return (
-    <div className="flex items-center justify-between gap-2 text-sm">
-      <span className="text-slate-500">{label}</span>
-      <StarDisplay value={value} />
+    <div className="inline-grid grid-cols-[auto_auto] items-center gap-x-2 gap-y-2 text-sm">
+      {rows.map((row) => (
+        <RatingPair key={row.label} label={row.label} value={row.value} align={align} />
+      ))}
     </div>
+  );
+}
+
+function RatingPair({
+  label,
+  value,
+  align,
+}: {
+  label: string;
+  value: number;
+  align: "left" | "right";
+}) {
+  return (
+    <>
+      <span
+        className={`text-slate-500 ${
+          align === "right" ? "text-right" : "text-left"
+        }`}
+      >
+        {label}
+      </span>
+      <StarDisplay value={value} />
+    </>
   );
 }
