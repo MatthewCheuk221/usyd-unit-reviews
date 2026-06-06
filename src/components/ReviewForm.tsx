@@ -22,6 +22,7 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
   const [title, setTitle] = useState("");
   const [coordinatorName, setCoordinatorName] = useState("");
   const [lecturerName, setLecturerName] = useState("");
+  const [tutorName, setTutorName] = useState("");
   const [year, setYear] = useState(getDefaultYear);
   const [content, setContent] = useState("");
   const [grade, setGrade] = useState<Grade | null>(null);
@@ -36,6 +37,7 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
     setTitle("");
     setCoordinatorName("");
     setLecturerName("");
+    setTutorName("");
     setYear(getDefaultYear());
     setContent("");
     setGrade(null);
@@ -75,6 +77,7 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
           title,
           coordinatorName,
           lecturerName,
+          tutorName,
           year,
           content,
           grade,
@@ -140,6 +143,9 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
             </select>
           </div>
         </Field>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Coordinator" required>
           <input
             type="text"
@@ -159,6 +165,16 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
             value={lecturerName}
             onChange={(e) => setLecturerName(e.target.value)}
             placeholder="Lecturer name"
+            className="input-field"
+          />
+        </Field>
+        <Field label="Tutor">
+          <input
+            type="text"
+            maxLength={120}
+            value={tutorName}
+            onChange={(e) => setTutorName(e.target.value)}
+            placeholder="Tutor name (optional)"
             className="input-field"
           />
         </Field>
