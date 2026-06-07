@@ -15,6 +15,7 @@ Live demo: [https://usyd-unit-reviews.vercel.app](https://usyd-unit-reviews.verc
   - Grade (H, D, C, P, F)
   - Star ratings (1–5): Unit Content, Overall Workload, Exam Difficulty, Final Result
   - Free-text review content
+  - Google reCAPTCHA v2 verification (when configured)
 - AI summary generated from review content when a unit has more than one review
 - Built-in moderation flow:
   - Report review (public, one report per device per review)
@@ -27,6 +28,7 @@ Live demo: [https://usyd-unit-reviews.vercel.app](https://usyd-unit-reviews.verc
 - Tailwind CSS 4
 - Turso (libSQL) via `@libsql/client` for persistent storage on Vercel
 - Ollama Cloud (`https://ollama.com`) for production AI summaries; local Ollama optional for dev
+- Google reCAPTCHA v2 for review-submission bot protection
 
 ## Quick Start
 
@@ -78,6 +80,13 @@ Use `.env` locally or your deployment secret manager (e.g. Vercel) to set:
 - `TRUSTED_PROXY_COUNT`
   - Number of trusted reverse proxies in front of app.
   - Set `0` for direct local/dev use.
+- `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET_KEY` (recommended for production)
+  - Google reCAPTCHA keys for review submission.
+  - Create at [google.com/recaptcha/admin/create](https://www.google.com/recaptcha/admin/create) — use **reCAPTCHA v2 "I'm not a robot" Checkbox**.
+  - Add your production domain, `*.vercel.app` (if using Vercel previews), and `localhost` for local dev.
+  - `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` is public (browser widget).
+  - `RECAPTCHA_SECRET_KEY` is private (server verification only).
+  - If unset, CAPTCHA is skipped (convenient for local development).
 
 ### AI Summary Variables
 
@@ -88,6 +97,24 @@ Use `.env` locally or your deployment secret manager (e.g. Vercel) to set:
   - **Local dev:** any model your local Ollama server has pulled
 
 The app passes `OLLAMA_MODEL` exactly as configured. On Vercel, only cloud-available models work — local-only models will fail. In production with an API key set, failed AI requests return an error instead of silently falling back. In local dev without a key, a simple excerpt fallback is used.
+
+## reCAPTCHA Setup
+
+1. Go to [google.com/recaptcha/admin/create](https://www.google.com/recaptcha/admin/create).
+2. Create a site with type **reCAPTCHA v2 → "I'm not a robot" Checkbox** (not v3).
+3. Add domains:
+   - Production: `yourdomain.com`
+   - Vercel: `usyd-unit-reviews.vercel.app` (and `*.vercel.app` if needed)
+   - Local dev: `localhost`
+4. Copy the **Site key** and **Secret key**.
+5. Set in `.env` (local) or Vercel project settings (production):
+
+```
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=<site-key>
+RECAPTCHA_SECRET_KEY=<secret-key>
+```
+
+When both keys are set, the review form shows a CAPTCHA widget and `POST /api/reviews` verifies the token server-side before accepting a submission.
 
 ## Ollama Setup
 
@@ -141,6 +168,13 @@ OLLAMA_API_KEY=
 OLLAMA_MODEL=gemma3:4b-cloud
 ```
 
+Recommended for production (spam protection):
+
+```
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=
+RECAPTCHA_SECRET_KEY=
+```
+
 ## Security Notes
 
 The project includes multiple hardening controls:
@@ -149,7 +183,8 @@ The project includes multiple hardening controls:
 - Origin/host validation for state-changing endpoints
 - Signed session/device cookies for abuse controls
 - Persistent, Turso-backed rate limiting with maintenance and caps
-- CSP and additional browser hardening headers via `src/proxy.ts`
+- CSP and additional browser hardening headers via `src/proxy.ts` (includes Google reCAPTCHA domains)
+- Google reCAPTCHA v2 on review submission with server-side token verification
 - Admin token verification using constant-time comparison
 - Report deduplication and per-review report flood control
 - LLM prompt hardening (reviews wrapped in tags; metadata excluded from summaries)
@@ -190,10 +225,14 @@ For git hygiene, keep local DB files and real env secrets out of source control.
 |---|---|
 | `data/units.json` | Unit catalog |
 | `src/lib/db.ts` | Database layer (Turso / local SQLite) |
+| `src/lib/captcha.ts` | Google reCAPTCHA server-side verification |
+| `src/lib/requestSecurity.ts` | Origin checks, rate-limit fingerprints, request parsing |
 | `src/lib/summarizer.ts` | Ollama AI summarization |
 | `src/lib/types.ts` | Types, grades, browse categories |
 | `src/proxy.ts` | Security headers (CSP, cookies) |
 | `src/components/ReviewForm.tsx` | Review submission form |
+| `src/components/ReCaptcha.tsx` | Google reCAPTCHA v2 widget |
+| `src/components/UnitReviews.tsx` | Review list, modal form overlay |
 | `src/components/ReviewCard.tsx` | Review display card |
 | `src/components/AISummary.tsx` | AI summary UI |
 | `src/app/units/[category]/` | Unit browse pages |
