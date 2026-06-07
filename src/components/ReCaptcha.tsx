@@ -52,7 +52,9 @@ function loadReCaptchaScript(): Promise<void> {
     }
     script.onload = () => resolve();
     script.onerror = () => reject(new Error("Failed to load reCAPTCHA script"));
-    document.head.appendChild(script);
+    
+    // Append to body instead of head to ensure it runs after DOM is ready
+    document.body.appendChild(script);
   });
 
   return scriptLoadPromise;
