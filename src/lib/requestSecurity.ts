@@ -2,6 +2,12 @@ import { createHash } from "crypto";
 import type { NextRequest } from "next/server";
 
 const DEFAULT_MAX_BODY_BYTES = 16 * 1024;
+type EnvMap = Record<string, string | undefined>;
+
+function getEnv(name: string): string | undefined {
+  const maybeProcess = globalThis as { process?: { env?: EnvMap } };
+  return maybeProcess.process?.env?.[name];
+}
 
 function normalizeAllowedHost(raw: string): string | null {
   const value = raw.trim().toLowerCase();
@@ -15,14 +21,14 @@ function normalizeAllowedHost(raw: string): string | null {
 }
 
 function getAllowedOrigins(): Set<string> {
-  const fromEnv = (process.env.ALLOWED_ORIGINS || "")
+  const fromEnv = (getEnv("ALLOWED_ORIGINS") || "")
     .split(",")
     .map(normalizeAllowedHost)
-    .filter((s): s is string => Boolean(s));
+    .filter((s: string | null): s is string => Boolean(s));
 
   // Developer-friendly defaults for local runs. Production remains strict and
   // requires explicit ALLOWED_ORIGINS configuration.
-  if (process.env.NODE_ENV !== "production") {
+  if (getEnv("NODE_ENV") !== "production") {
     fromEnv.push("127.0.0.1:3000", "localhost:3000", "127.0.0.1", "localhost");
   }
 
@@ -76,11 +82,11 @@ function extractClientIpFromForwarded(
 }
 
 function getTrustedProxyCount(): number {
-  const n = parseInt(process.env.TRUSTED_PROXY_COUNT ?? "0", 10);
+  const n = parseInt(getEnv("TRUSTED_PROXY_COUNT") ?? "0", 10);
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
-function resolveClientIp(request: NextRequest): string {
+export function resolveClientIp(request: NextRequest): string {
   const trustedProxyCount = getTrustedProxyCount();
   if (trustedProxyCount <= 0) return "unknown";
 
