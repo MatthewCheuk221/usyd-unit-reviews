@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ReviewCard } from "./ReviewCard";
 import { ReviewForm } from "./ReviewForm";
 import { AISummary } from "./AISummary";
@@ -12,7 +12,6 @@ export function UnitReviews({ unitCode }: { unitCode: string }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [summaryKey, setSummaryKey] = useState(0);
-  const formDialogRef = useRef<HTMLDialogElement>(null);
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -30,15 +29,25 @@ export function UnitReviews({ unitCode }: { unitCode: string }) {
     fetchReviews();
   }, [fetchReviews]);
 
+  // Close the modal on Escape and lock background scroll while open. We use a
+  // regular overlay (not <dialog>.showModal()) so that the reCAPTCHA challenge
+  // popup — which is appended to <body> — can layer above the form. A native
+  // modal dialog renders in the browser top layer and would cover it.
   useEffect(() => {
-    const dialog = formDialogRef.current;
-    if (!dialog) return;
+    if (!showForm) return;
 
-    if (showForm) {
-      if (!dialog.open) dialog.showModal();
-    } else if (dialog.open) {
-      dialog.close();
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setShowForm(false);
     }
+
+    document.addEventListener("keydown", onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [showForm]);
 
   function openForm() {
@@ -72,30 +81,35 @@ export function UnitReviews({ unitCode }: { unitCode: string }) {
         </button>
       </div>
 
-      <dialog
-        ref={formDialogRef}
-        onClose={closeForm}
-        className="fixed inset-0 z-50 m-0 h-full max-h-none w-full max-w-none border-0 bg-transparent p-0 backdrop:bg-slate-900/50"
-      >
+      {showForm && (
         <div
-          className="flex min-h-full items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-slate-900/50"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeForm();
           }}
         >
-          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
-            <button
-              type="button"
-              onClick={closeForm}
-              aria-label="Close review form"
-              className="absolute right-4 top-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-            >
-              ✕
-            </button>
-            <ReviewForm unitCode={unitCode} onSubmitted={handleSubmitted} />
+          <div
+            className="flex min-h-full items-center justify-center p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) closeForm();
+            }}
+          >
+            <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
+              <button
+                type="button"
+                onClick={closeForm}
+                aria-label="Close review form"
+                className="absolute right-4 top-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              >
+                ✕
+              </button>
+              <ReviewForm unitCode={unitCode} onSubmitted={handleSubmitted} />
+            </div>
           </div>
         </div>
-      </dialog>
+      )}
 
       {loading ? (
         <div className="space-y-4">
