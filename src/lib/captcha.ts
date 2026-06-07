@@ -1,15 +1,14 @@
-const TURNSTILE_VERIFY_URL =
-  "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+const RECAPTCHA_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify";
 
-interface TurnstileVerifyResponse {
+interface ReCaptchaVerifyResponse {
   success: boolean;
 }
 
-export async function verifyTurnstileToken(
+export async function verifyReCaptchaToken(
   token: string,
   remoteIp?: string
 ): Promise<boolean> {
-  const secret = process.env.TURNSTILE_SECRET_KEY;
+  const secret = process.env.RECAPTCHA_SECRET_KEY;
   if (!secret) {
     // CAPTCHA is disabled unless a secret is configured.
     return true;
@@ -27,7 +26,7 @@ export async function verifyTurnstileToken(
   }
 
   try {
-    const response = await fetch(TURNSTILE_VERIFY_URL, {
+    const response = await fetch(RECAPTCHA_VERIFY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: body.toString(),
@@ -38,7 +37,7 @@ export async function verifyTurnstileToken(
       return false;
     }
 
-    const data = (await response.json()) as TurnstileVerifyResponse;
+    const data = (await response.json()) as ReCaptchaVerifyResponse;
     return data.success === true;
   } catch {
     return false;

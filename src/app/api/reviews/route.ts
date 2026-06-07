@@ -14,7 +14,7 @@ import {
   getStableClientFingerprint,
   getShardedGlobalRateKey,
 } from "@/lib/requestSecurity";
-import { verifyTurnstileToken } from "@/lib/captcha";
+import { verifyReCaptchaToken } from "@/lib/captcha";
 import type { Grade, PublicReview, ReviewInput } from "@/lib/types";
 import { GRADES, YEARS } from "@/lib/types";
 
@@ -136,11 +136,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (process.env.TURNSTILE_SECRET_KEY) {
-      const turnstileToken =
-        typeof body.turnstileToken === "string" ? body.turnstileToken : "";
-      const captchaOk = await verifyTurnstileToken(
-        turnstileToken,
+    if (process.env.RECAPTCHA_SECRET_KEY) {
+      const recaptchaToken =
+        typeof body.recaptchaToken === "string" ? body.recaptchaToken : "";
+      const captchaOk = await verifyReCaptchaToken(
+        recaptchaToken,
         resolveClientIp(request)
       );
       if (!captchaOk) {

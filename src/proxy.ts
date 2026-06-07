@@ -148,13 +148,14 @@ export async function proxy(request: NextRequest) {
   const nonce = btoa(String.fromCharCode(...nonceBytes));
 
   const isDev = process.env.NODE_ENV !== "production";
-  const turnstileOrigin = "https://challenges.cloudflare.com";
+  const recaptchaGoogleOrigin = "https://www.google.com";
+  const recaptchaStaticOrigin = "https://www.gstatic.com";
   const scriptSrc = isDev
-    ? `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' ${turnstileOrigin}`
-    : `script-src 'self' 'nonce-${nonce}' ${turnstileOrigin}`;
+    ? `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' ${recaptchaGoogleOrigin} ${recaptchaStaticOrigin}`
+    : `script-src 'self' 'nonce-${nonce}' ${recaptchaGoogleOrigin} ${recaptchaStaticOrigin}`;
   const connectSrc = isDev
-    ? `connect-src 'self' ws: wss: ${turnstileOrigin}`
-    : `connect-src 'self' ${turnstileOrigin}`;
+    ? `connect-src 'self' ws: wss: ${recaptchaGoogleOrigin}`
+    : `connect-src 'self' ${recaptchaGoogleOrigin}`;
 
   const csp = [
     "default-src 'self'",
@@ -168,7 +169,7 @@ export async function proxy(request: NextRequest) {
     "img-src 'self' data:",
     "font-src 'self'",
     connectSrc,
-    `frame-src ${turnstileOrigin}`,
+    `frame-src ${recaptchaGoogleOrigin} https://recaptcha.google.com`,
     // Explicitly block plugin content (<object>, <embed>, <applet>).
     // Without this, default-src 'self' would permit same-origin plugins,
     // leaving a legacy plugin execution path open.

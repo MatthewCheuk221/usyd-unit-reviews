@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { StarRating } from "./StarRating";
-import { Turnstile } from "./Turnstile";
+import { ReCaptcha } from "./ReCaptcha";
 import { parseJsonResponse } from "@/lib/api";
 import type { Grade } from "@/lib/types";
 import { GRADES, YEARS } from "@/lib/types";
@@ -33,12 +33,12 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
   const [ratingFinalResult, setRatingFinalResult] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [turnstileToken, setTurnstileToken] = useState("");
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
-  const captchaEnabled = Boolean(turnstileSiteKey);
+  const [recaptchaToken, setRecaptchaToken] = useState("");
+  const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "";
+  const captchaEnabled = Boolean(recaptchaSiteKey);
 
-  const handleTurnstileTokenChange = useCallback((token: string) => {
-    setTurnstileToken(token);
+  const handleReCaptchaTokenChange = useCallback((token: string) => {
+    setRecaptchaToken(token);
   }, []);
 
   function resetForm() {
@@ -92,7 +92,7 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
       return;
     }
 
-    if (captchaEnabled && !turnstileToken) {
+    if (captchaEnabled && !recaptchaToken) {
       setError("Please complete the CAPTCHA before submitting.");
       return;
     }
@@ -116,7 +116,7 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
           ratingWorkload,
           ratingExamDifficulty,
           ratingFinalResult,
-          turnstileToken,
+          recaptchaToken,
         }),
       });
 
@@ -130,7 +130,7 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
       }
 
       resetForm();
-      setTurnstileToken("");
+      setRecaptchaToken("");
       onSubmitted();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -273,16 +273,16 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
 
       {captchaEnabled && (
         <Field label="Verification" required>
-          <Turnstile
-            siteKey={turnstileSiteKey}
-            onTokenChange={handleTurnstileTokenChange}
+          <ReCaptcha
+            siteKey={recaptchaSiteKey}
+            onTokenChange={handleReCaptchaTokenChange}
           />
         </Field>
       )}
 
       <button
         type="submit"
-        disabled={submitting || (captchaEnabled && !turnstileToken)}
+        disabled={submitting || (captchaEnabled && !recaptchaToken)}
         className="w-full rounded-xl bg-orange-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 disabled:opacity-50 sm:w-auto"
       >
         {submitting ? "Submitting..." : "Submit review"}

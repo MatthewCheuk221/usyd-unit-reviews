@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 declare global {
   interface Window {
-    turnstile?: {
+    grecaptcha?: {
       render: (
         container: HTMLElement,
         options: {
@@ -13,31 +13,29 @@ declare global {
           "expired-callback"?: () => void;
           "error-callback"?: () => void;
         }
-      ) => string;
-      remove: (widgetId: string) => void;
+      ) => number;
+      reset: (widgetId?: number) => void;
     };
   }
 }
 
-const SCRIPT_SRC =
-  "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-
+const SCRIPT_SRC = "https://www.google.com/recaptcha/api.js?render=explicit";
 let scriptLoadPromise: Promise<void> | null = null;
 
-function loadTurnstileScript(): Promise<void> {
+function loadReCaptchaScript(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
-  if (window.turnstile) return Promise.resolve();
+  if (window.grecaptcha) return Promise.resolve();
   if (scriptLoadPromise) return scriptLoadPromise;
 
   scriptLoadPromise = new Promise<void>((resolve, reject) => {
     const existing = document.querySelector<HTMLScriptElement>(
-      'script[src^="https://challenges.cloudflare.com/turnstile/v0/api.js"]'
+      'script[src^="https://www.google.com/recaptcha/api.js"]'
     );
     if (existing) {
       existing.addEventListener("load", () => resolve(), { once: true });
       existing.addEventListener(
         "error",
-        () => reject(new Error("Failed to load Turnstile script")),
+        () => reject(new Error("Failed to load reCAPTCHA script")),
         { once: true }
       );
       return;
@@ -48,33 +46,31 @@ function loadTurnstileScript(): Promise<void> {
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Turnstile script"));
+    script.onerror = () => reject(new Error("Failed to load reCAPTCHA script"));
     document.head.appendChild(script);
   });
 
   return scriptLoadPromise;
 }
 
-interface TurnstileProps {
+interface ReCaptchaProps {
   siteKey: string;
   onTokenChange: (token: string) => void;
 }
 
-export function Turnstile({ siteKey, onTokenChange }: TurnstileProps) {
+export function ReCaptcha({ siteKey, onTokenChange }: ReCaptchaProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const widgetIdRef = useRef<string | null>(null);
+  const widgetIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     async function mountWidget() {
       try {
-        await loadTurnstileScript();
-        if (!isMounted || !containerRef.current || !window.turnstile) {
-          return;
-        }
+        await loadReCaptchaScript();
+        if (!isMounted || !containerRef.current || !window.grecaptcha) return;
 
-        widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        widgetIdRef.current = window.grecaptcha.render(containerRef.current, {
           sitekey: siteKey,
           callback: (token) => onTokenChange(token),
           "expired-callback": () => onTokenChange(""),
@@ -89,11 +85,11 @@ export function Turnstile({ siteKey, onTokenChange }: TurnstileProps) {
 
     return () => {
       isMounted = false;
-      if (window.turnstile && widgetIdRef.current) {
-        window.turnstile.remove(widgetIdRef.current);
+      if (window.grecaptcha && widgetIdRef.current !== null) {
+        window.grecaptcha.reset(widgetIdRef.current);
       }
     };
   }, [onTokenChange, siteKey]);
 
-  return <div ref={containerRef} className="min-h-[65px]" />;
+  return <div ref={containerRef} className="min-h-[78px]" />;
 }
