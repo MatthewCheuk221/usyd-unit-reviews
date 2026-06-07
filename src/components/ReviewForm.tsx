@@ -273,10 +273,12 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
 
       {captchaEnabled && (
         <Field label="Verification" required>
-          <ReCaptcha
-            siteKey={recaptchaSiteKey}
-            onTokenChange={handleReCaptchaTokenChange}
-          />
+          <div className="block pt-2">
+            <ReCaptcha
+              siteKey={recaptchaSiteKey}
+              onTokenChange={handleReCaptchaTokenChange}
+            />
+          </div>
         </Field>
       )}
 
