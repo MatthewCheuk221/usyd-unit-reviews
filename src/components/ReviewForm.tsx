@@ -273,12 +273,10 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
 
       {captchaEnabled && (
         <Field label="Verification" required>
-          <div className="block pt-2">
-            <ReCaptcha
-              siteKey={recaptchaSiteKey}
-              onTokenChange={handleReCaptchaTokenChange}
-            />
-          </div>
+          <ReCaptcha
+            siteKey={recaptchaSiteKey}
+            onTokenChange={handleReCaptchaTokenChange}
+          />
         </Field>
       )}
 
@@ -303,12 +301,12 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block space-y-1.5">
-      <span className="text-sm font-medium text-slate-700">
+    <label className="block">
+      <span className="block text-sm font-medium text-slate-700">
         {label}
         {required && <span className="text-orange-500 ml-0.5">*</span>}
       </span>
-      {children}
+      <div className="mt-2 block">{children}</div>
     </label>
   );
 }
