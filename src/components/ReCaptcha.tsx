@@ -45,12 +45,27 @@ function loadReCaptchaScript(): Promise<void> {
     script.src = SCRIPT_SRC;
     script.async = true;
     script.defer = true;
+    // Keep compatibility with strict CSP nonce set by proxy.
+    const nonce = document.body?.getAttribute("data-nonce");
+    if (nonce) {
+      script.setAttribute("nonce", nonce);
+    }
     script.onload = () => resolve();
     script.onerror = () => reject(new Error("Failed to load reCAPTCHA script"));
     document.head.appendChild(script);
   });
 
   return scriptLoadPromise;
+}
+
+async function waitForGreCaptcha(maxAttempts = 25): Promise<boolean> {
+  for (let i = 0; i < maxAttempts; i++) {
+    if (window.grecaptcha) {
+      return true;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 40));
+  }
+  return false;
 }
 
 interface ReCaptchaProps {
@@ -68,7 +83,11 @@ export function ReCaptcha({ siteKey, onTokenChange }: ReCaptchaProps) {
     async function mountWidget() {
       try {
         await loadReCaptchaScript();
-        if (!isMounted || !containerRef.current || !window.grecaptcha) return;
+        const ready = await waitForGreCaptcha();
+        if (!ready || !isMounted || !containerRef.current || !window.grecaptcha) {
+          onTokenChange("");
+          return;
+        }
 
         widgetIdRef.current = window.grecaptcha.render(containerRef.current, {
           sitekey: siteKey,
