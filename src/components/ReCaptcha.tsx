@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 declare global {
   interface Window {
     grecaptcha?: {
+      ready?: (cb: () => void) => void;
       render: (
         container: HTMLElement,
         options: {
@@ -16,23 +17,31 @@ declare global {
       ) => number;
       reset: (widgetId?: number) => void;
     };
+    __onReCaptchaLoad?: () => void;
   }
 }
 
-const SCRIPT_SRC = "https://www.google.com/recaptcha/api.js?render=explicit";
+const CALLBACK_NAME = "__onReCaptchaLoad";
+const SCRIPT_SRC = `https://www.google.com/recaptcha/api.js?onload=${CALLBACK_NAME}&render=explicit`;
+
 let scriptLoadPromise: Promise<void> | null = null;
 
 function loadReCaptchaScript(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
-  if (window.grecaptcha) return Promise.resolve();
+  if (window.grecaptcha?.render) return Promise.resolve();
   if (scriptLoadPromise) return scriptLoadPromise;
 
   scriptLoadPromise = new Promise<void>((resolve, reject) => {
+    // The onload callback fires once the API (including grecaptcha.render) is ready.
+    window[CALLBACK_NAME] = () => resolve();
+
     const existing = document.querySelector<HTMLScriptElement>(
       'script[src^="https://www.google.com/recaptcha/api.js"]'
     );
     if (existing) {
-      existing.addEventListener("load", () => resolve(), { once: true });
+      // Script tag already present; if the API is ready, resolve now,
+      // otherwise the onload callback above will resolve it.
+      if (window.grecaptcha?.render) resolve();
       existing.addEventListener(
         "error",
         () => reject(new Error("Failed to load reCAPTCHA script")),
@@ -45,29 +54,16 @@ function loadReCaptchaScript(): Promise<void> {
     script.src = SCRIPT_SRC;
     script.async = true;
     script.defer = true;
-    // Keep compatibility with strict CSP nonce set by proxy.
+    // Keep compatibility with the strict CSP nonce set by proxy.
     const nonce = document.body?.getAttribute("data-nonce");
     if (nonce) {
       script.setAttribute("nonce", nonce);
     }
-    script.onload = () => resolve();
     script.onerror = () => reject(new Error("Failed to load reCAPTCHA script"));
-    
-    // Append to body instead of head to ensure it runs after DOM is ready
-    document.body.appendChild(script);
+    document.head.appendChild(script);
   });
 
   return scriptLoadPromise;
-}
-
-async function waitForGreCaptcha(maxAttempts = 25): Promise<boolean> {
-  for (let i = 0; i < maxAttempts; i++) {
-    if (window.grecaptcha) {
-      return true;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 40));
-  }
-  return false;
 }
 
 interface ReCaptchaProps {
@@ -85,19 +81,31 @@ export function ReCaptcha({ siteKey, onTokenChange }: ReCaptchaProps) {
     async function mountWidget() {
       try {
         await loadReCaptchaScript();
-        const ready = await waitForGreCaptcha();
-        if (!ready || !isMounted || !containerRef.current || !window.grecaptcha) {
-          onTokenChange("");
-          return;
-        }
+      } catch (err) {
+        console.error("[reCAPTCHA] script failed to load", err);
+        onTokenChange("");
+        return;
+      }
 
-        widgetIdRef.current = window.grecaptcha.render(containerRef.current, {
+      const container = containerRef.current;
+      if (!isMounted || !container || !window.grecaptcha?.render) {
+        return;
+      }
+
+      // Avoid rendering twice into the same container (e.g. React strict mode).
+      if (widgetIdRef.current !== null || container.childElementCount > 0) {
+        return;
+      }
+
+      try {
+        widgetIdRef.current = window.grecaptcha.render(container, {
           sitekey: siteKey,
           callback: (token) => onTokenChange(token),
           "expired-callback": () => onTokenChange(""),
           "error-callback": () => onTokenChange(""),
         });
-      } catch {
+      } catch (err) {
+        console.error("[reCAPTCHA] failed to render widget", err);
         onTokenChange("");
       }
     }
@@ -107,7 +115,11 @@ export function ReCaptcha({ siteKey, onTokenChange }: ReCaptchaProps) {
     return () => {
       isMounted = false;
       if (window.grecaptcha && widgetIdRef.current !== null) {
-        window.grecaptcha.reset(widgetIdRef.current);
+        try {
+          window.grecaptcha.reset(widgetIdRef.current);
+        } catch {
+          // ignore reset errors during unmount
+        }
       }
     };
   }, [onTokenChange, siteKey]);
