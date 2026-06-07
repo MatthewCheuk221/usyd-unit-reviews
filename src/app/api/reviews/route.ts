@@ -10,9 +10,11 @@ import {
   getDeviceAgeSeconds,
   getSessionAgeSeconds,
   readLimitedJson,
+  resolveClientIp,
   getStableClientFingerprint,
   getShardedGlobalRateKey,
 } from "@/lib/requestSecurity";
+import { verifyTurnstileToken } from "@/lib/captcha";
 import type { Grade, PublicReview, ReviewInput } from "@/lib/types";
 import { GRADES, YEARS } from "@/lib/types";
 
@@ -64,7 +66,10 @@ export async function GET(request: NextRequest) {
   }
 
   const reviews = await getReviewsByUnit(unitCode);
-  const safe: PublicReview[] = reviews.map(({ reportedCount: _ignored, ...rest }) => rest);
+  const safe: PublicReview[] = reviews.map(({ reportedCount, ...rest }) => {
+    void reportedCount;
+    return rest;
+  });
   return NextResponse.json(safe);
 }
 
@@ -129,6 +134,21 @@ export async function POST(request: NextRequest) {
         { error: "You are submitting reviews too quickly. Please wait and try again." },
         { status: 429 }
       );
+    }
+
+    if (process.env.TURNSTILE_SECRET_KEY) {
+      const turnstileToken =
+        typeof body.turnstileToken === "string" ? body.turnstileToken : "";
+      const captchaOk = await verifyTurnstileToken(
+        turnstileToken,
+        resolveClientIp(request)
+      );
+      if (!captchaOk) {
+        return NextResponse.json(
+          { error: "CAPTCHA verification failed. Please try again." },
+          { status: 400 }
+        );
+      }
     }
 
     // Sanitize and enforce lengths

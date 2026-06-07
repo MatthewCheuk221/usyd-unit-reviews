@@ -148,12 +148,13 @@ export async function proxy(request: NextRequest) {
   const nonce = btoa(String.fromCharCode(...nonceBytes));
 
   const isDev = process.env.NODE_ENV !== "production";
+  const turnstileOrigin = "https://challenges.cloudflare.com";
   const scriptSrc = isDev
-    ? `script-src 'self' 'nonce-${nonce}' 'unsafe-eval'`
-    : `script-src 'self' 'nonce-${nonce}'`;
+    ? `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' ${turnstileOrigin}`
+    : `script-src 'self' 'nonce-${nonce}' ${turnstileOrigin}`;
   const connectSrc = isDev
-    ? "connect-src 'self' ws: wss:"
-    : "connect-src 'self'";
+    ? `connect-src 'self' ws: wss: ${turnstileOrigin}`
+    : `connect-src 'self' ${turnstileOrigin}`;
 
   const csp = [
     "default-src 'self'",
@@ -167,6 +168,7 @@ export async function proxy(request: NextRequest) {
     "img-src 'self' data:",
     "font-src 'self'",
     connectSrc,
+    `frame-src ${turnstileOrigin}`,
     // Explicitly block plugin content (<object>, <embed>, <applet>).
     // Without this, default-src 'self' would permit same-origin plugins,
     // leaving a legacy plugin execution path open.

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { StarRating } from "./StarRating";
+import { Turnstile } from "./Turnstile";
 import { parseJsonResponse } from "@/lib/api";
 import type { Grade } from "@/lib/types";
 import { GRADES, YEARS } from "@/lib/types";
@@ -32,6 +33,13 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
   const [ratingFinalResult, setRatingFinalResult] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+  const captchaEnabled = Boolean(turnstileSiteKey);
+
+  const handleTurnstileTokenChange = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
 
   function resetForm() {
     setTitle("");
@@ -84,6 +92,11 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
       return;
     }
 
+    if (captchaEnabled && !turnstileToken) {
+      setError("Please complete the CAPTCHA before submitting.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -103,6 +116,7 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
           ratingWorkload,
           ratingExamDifficulty,
           ratingFinalResult,
+          turnstileToken,
         }),
       });
 
@@ -116,6 +130,7 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
       }
 
       resetForm();
+      setTurnstileToken("");
       onSubmitted();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -256,9 +271,18 @@ export function ReviewForm({ unitCode, onSubmitted }: ReviewFormProps) {
         />
       </Field>
 
+      {captchaEnabled && (
+        <Field label="Verification" required>
+          <Turnstile
+            siteKey={turnstileSiteKey}
+            onTokenChange={handleTurnstileTokenChange}
+          />
+        </Field>
+      )}
+
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || (captchaEnabled && !turnstileToken)}
         className="w-full rounded-xl bg-orange-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 disabled:opacity-50 sm:w-auto"
       >
         {submitting ? "Submitting..." : "Submit review"}
