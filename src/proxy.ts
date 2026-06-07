@@ -152,7 +152,7 @@ export async function proxy(request: NextRequest) {
   const recaptchaStaticOrigin = "https://www.gstatic.com";
   const scriptSrc = isDev
     ? `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' ${recaptchaGoogleOrigin} ${recaptchaStaticOrigin}`
-    : `script-src 'self' 'nonce-${nonce}' ${recaptchaGoogleOrigin} ${recaptchaStaticOrigin}`;
+    : `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' ${recaptchaGoogleOrigin} ${recaptchaStaticOrigin}`;
   const connectSrc = isDev
     ? `connect-src 'self' ws: wss: ${recaptchaGoogleOrigin}`
     : `connect-src 'self' ${recaptchaGoogleOrigin}`;
@@ -169,7 +169,7 @@ export async function proxy(request: NextRequest) {
     "img-src 'self' data:",
     "font-src 'self'",
     connectSrc,
-    `frame-src ${recaptchaGoogleOrigin} https://recaptcha.google.com`,
+    `frame-src 'self' ${recaptchaGoogleOrigin} https://recaptcha.google.com`,
     // Explicitly block plugin content (<object>, <embed>, <applet>).
     // Without this, default-src 'self' would permit same-origin plugins,
     // leaving a legacy plugin execution path open.
